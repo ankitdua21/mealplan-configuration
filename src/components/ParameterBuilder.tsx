@@ -74,10 +74,6 @@ const ParameterBuilder = ({
     updateParameters({ dateRanges });
   };
 
-  const handleChargeTypeChange = (chargeType: ChargeType) => {
-    updateParameters({ chargeType });
-  };
-
   const handleRoomTypeToggle = (roomType: RoomType) => {
     const isSelected = parameters.roomTypes.some(rt => rt.id === roomType.id);
     let updatedRoomTypes: RoomType[];
@@ -107,40 +103,6 @@ const ParameterBuilder = ({
   return (
     <Card>
       <CardContent className="pt-6 space-y-4">
-        <div className="space-y-2">
-          <Label>Date Ranges</Label>
-          <DateRangePicker 
-            ranges={parameters.dateRanges} 
-            onChange={handleDateRangeChange} 
-          />
-        </div>
-
-        <Separator />
-
-        <div className="space-y-2">
-          <Label>Charge Type</Label>
-          <RadioGroup 
-            value={parameters.chargeType} 
-            onValueChange={handleChargeTypeChange as (value: string) => void}
-            className="flex space-x-4"
-          >
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="per-room" id="per-room" />
-              <Label htmlFor="per-room" className="cursor-pointer">Per Room</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="per-adult" id="per-adult" />
-              <Label htmlFor="per-adult" className="cursor-pointer">Per Adult</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="per-occupant" id="per-occupant" />
-              <Label htmlFor="per-occupant" className="cursor-pointer">Per Occupant</Label>
-            </div>
-          </RadioGroup>
-        </div>
-
-        <Separator />
-
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
             <Label>Room Types</Label>
@@ -183,6 +145,16 @@ const ParameterBuilder = ({
               ))}
             </div>
           </div>
+        </div>
+
+        <Separator />
+
+        <div className="space-y-2">
+          <Label>Date Ranges</Label>
+          <DateRangePicker 
+            ranges={parameters.dateRanges} 
+            onChange={handleDateRangeChange} 
+          />
         </div>
       </CardContent>
     </Card>

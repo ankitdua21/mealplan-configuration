@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ParameterSet, RatePlan, RoomType, SupplementValue, ChargeType } from "@/models/SupplementTypes";
 import ParameterBuilder from "./ParameterBuilder";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 interface ValueFormProps {
   roomTypes: RoomType[];
@@ -60,36 +61,69 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
     setParameters(newParameters);
   };
 
+  const handleChargeTypeChange = (value: ChargeType) => {
+    if (parameters) {
+      setParameters({
+        ...parameters,
+        chargeType: value,
+      });
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
         <CardTitle className="text-lg">Add Mealplan Value</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
-        <div className="space-y-2">
-          <Label htmlFor="amount">Amount</Label>
-          <div className="flex">
-            <Input
-              id="amount"
-              type="number"
-              min="0"
-              step="0.01"
-              placeholder="0.00"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              className="rounded-r-none"
-            />
-            <Select value={currency} onValueChange={setCurrency}>
-              <SelectTrigger className="w-24 rounded-l-none border-l-0">
-                <SelectValue placeholder="USD" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="USD">USD</SelectItem>
-                <SelectItem value="EUR">EUR</SelectItem>
-                <SelectItem value="GBP">GBP</SelectItem>
-                <SelectItem value="JPY">JPY</SelectItem>
-              </SelectContent>
-            </Select>
+        <div className="flex items-end space-x-4">
+          <div className="space-y-2">
+            <Label htmlFor="amount">Amount</Label>
+            <div className="flex">
+              <Input
+                id="amount"
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="0.00"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                className="rounded-r-none w-24"
+              />
+              <Select value={currency} onValueChange={setCurrency}>
+                <SelectTrigger className="w-20 rounded-l-none border-l-0">
+                  <SelectValue placeholder="USD" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="USD">USD</SelectItem>
+                  <SelectItem value="EUR">EUR</SelectItem>
+                  <SelectItem value="GBP">GBP</SelectItem>
+                  <SelectItem value="JPY">JPY</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          
+          <div className="space-y-2">
+            <Label>Charge Type</Label>
+            <RadioGroup 
+              value={parameters?.chargeType || "per-room"} 
+              onValueChange={handleChargeTypeChange as (value: string) => void}
+              className="flex space-x-4"
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="per-room" id="per-room" />
+                <Label htmlFor="per-room" className="cursor-pointer">Per Room</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="per-adult" id="per-adult" />
+                <Label htmlFor="per-adult" className="cursor-pointer">Per Adult</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="per-occupant" id="per-occupant" />
+                <Label htmlFor="per-occupant" className="cursor-pointer">Per Occupant</Label>
+              </div>
+            </RadioGroup>
           </div>
         </div>
 
@@ -102,12 +136,12 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
           />
         </div>
 
-        <div className="flex justify-end">
+        <div className="flex justify-start">
           <Button 
             onClick={handleAddValue}
             disabled={!amount || !parameters}
           >
-            Add Value
+            Add another value
           </Button>
         </div>
       </CardContent>

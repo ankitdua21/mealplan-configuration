@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -129,10 +128,10 @@ const MealplanSupplements = () => {
   };
 
   const handleSave = () => {
-    if (values.length === 0) {
+    if (!description) {
       toast({
         title: "Error",
-        description: "Please add at least one mealplan value",
+        description: "Please enter a mealplan description",
         variant: "destructive",
       });
       return;
@@ -242,7 +241,7 @@ const MealplanSupplements = () => {
             <Button
               size="lg"
               onClick={handleSave}
-              disabled={values.length === 0 || !description}
+              disabled={!description}
             >
               Save Mealplan
             </Button>
