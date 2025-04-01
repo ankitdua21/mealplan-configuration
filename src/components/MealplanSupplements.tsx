@@ -37,7 +37,6 @@ const MealplanSupplements = () => {
         const value2 = values[j];
         const conflictingParameters: Array<keyof Omit<typeof value1.parameters, 'id' | 'condition'>> = [];
         
-        // Check date ranges
         const dateRanges1 = value1.parameters.dateRanges;
         const dateRanges2 = value2.parameters.dateRanges;
         
@@ -63,7 +62,6 @@ const MealplanSupplements = () => {
           conflictingParameters.push("dateRanges");
         }
         
-        // Check room types
         const roomTypes1 = value1.parameters.roomTypes;
         const roomTypes2 = value2.parameters.roomTypes;
         
@@ -86,7 +84,6 @@ const MealplanSupplements = () => {
           conflictingParameters.push("roomTypes");
         }
         
-        // Check rate plans
         const ratePlans1 = value1.parameters.ratePlans;
         const ratePlans2 = value2.parameters.ratePlans;
         
@@ -109,12 +106,10 @@ const MealplanSupplements = () => {
           conflictingParameters.push("ratePlans");
         }
         
-        // Check charge type
         if (value1.parameters.chargeType === value2.parameters.chargeType) {
           conflictingParameters.push("chargeType");
         }
         
-        // If we have conflicts in all parameters, add to conflicts list
         if (conflictingParameters.length === 4) {
           conflicts.push({
             valueIds: [value1.id, value2.id],
@@ -163,7 +158,6 @@ const MealplanSupplements = () => {
       description: "Mealplan supplement has been saved successfully.",
     });
     
-    // Reset form
     setDescription("");
     setValues([]);
     setConflicts([]);
@@ -199,12 +193,12 @@ const MealplanSupplements = () => {
               <CardTitle>Configure New Supplement</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              <div className="flex flex-wrap gap-4 mb-6">
                 {supplementTypes.map((type) => (
                   <Button
                     key={type.id}
                     variant={type.type === "mealplan" ? "default" : "outline"}
-                    className="h-20"
+                    className="h-20 flex-1"
                     disabled={type.type !== "mealplan"}
                   >
                     {type.name}
@@ -229,17 +223,20 @@ const MealplanSupplements = () => {
             </CardContent>
           </Card>
           
-          <ValueList values={values} onRemove={handleRemoveValue} />
-          
           <ValueForm
             roomTypes={roomTypes}
             ratePlans={ratePlans}
             onAdd={handleAddValue}
           />
           
+          {values.length > 0 && (
+            <ValueList values={values} onRemove={handleRemoveValue} />
+          )}
+          
           <div className="flex justify-end">
             <Button
               size="lg"
+              className="bg-green-500 hover:bg-green-600"
               onClick={handleSave}
               disabled={!description}
             >
