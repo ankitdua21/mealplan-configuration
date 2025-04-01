@@ -1,10 +1,10 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ParameterSet, RatePlan, RoomType, SupplementValue } from "@/models/SupplementTypes";
+import { ParameterSet, RatePlan, RoomType, SupplementValue, ChargeType } from "@/models/SupplementTypes";
 import ParameterBuilder from "./ParameterBuilder";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -17,7 +17,19 @@ interface ValueFormProps {
 const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
   const [amount, setAmount] = useState("");
   const [currency, setCurrency] = useState("USD");
+  const [chargeType, setChargeType] = useState<ChargeType>("per-room");
   const [parameters, setParameters] = useState<ParameterSet | null>(null);
+
+  // Initialize parameters with all roomTypes and ratePlans selected
+  useEffect(() => {
+    setParameters({
+      id: crypto.randomUUID(),
+      dateRanges: [],
+      roomTypes: [...roomTypes],
+      ratePlans: [...ratePlans],
+      chargeType: chargeType,
+    });
+  }, [roomTypes, ratePlans, chargeType]);
 
   const handleAddValue = () => {
     if (!amount || !parameters) return;
@@ -26,7 +38,10 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
       id: crypto.randomUUID(),
       amount: parseFloat(amount),
       currency,
-      parameters,
+      parameters: {
+        ...parameters,
+        chargeType: chargeType, // Ensure charge type is updated
+      },
     };
 
     onAdd(value);
@@ -36,11 +51,18 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
   const resetForm = () => {
     setAmount("");
     setCurrency("USD");
-    setParameters(null);
+    setParameters({
+      id: crypto.randomUUID(),
+      dateRanges: [],
+      roomTypes: [...roomTypes],
+      ratePlans: [...ratePlans],
+      chargeType: chargeType,
+    });
   };
 
   const handleParametersChange = (newParameters: ParameterSet) => {
     setParameters(newParameters);
+    setChargeType(newParameters.chargeType); // Update charge type when parameters change
   };
 
   return (
@@ -76,10 +98,28 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
               </Select>
             </div>
           </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="chargeType">Charge Type</Label>
+            <Select value={chargeType} onValueChange={(value: ChargeType) => {
+              setChargeType(value);
+              if (parameters) {
+                setParameters({...parameters, chargeType: value});
+              }
+            }}>
+              <SelectTrigger id="chargeType">
+                <SelectValue placeholder="Select charge type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="per-room">Per Room</SelectItem>
+                <SelectItem value="per-adult">Per Adult</SelectItem>
+                <SelectItem value="per-occupant">Per Occupant</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         <div className="space-y-4">
-          <Label>Parameters</Label>
           <ParameterBuilder
             roomTypes={roomTypes}
             ratePlans={ratePlans}

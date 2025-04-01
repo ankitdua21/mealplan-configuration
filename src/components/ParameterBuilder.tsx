@@ -1,8 +1,6 @@
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
+import { useState, useEffect } from "react";
 import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
 import { ChargeType, DateRange, ParameterSet, RatePlan, RoomType } from "@/models/SupplementTypes";
 import DateRangePicker from "./DateRangePicker";
@@ -26,11 +24,44 @@ const ParameterBuilder = ({
     value || {
       id: crypto.randomUUID(),
       dateRanges: [],
-      roomTypes: [],
-      ratePlans: [],
+      roomTypes: [...roomTypes], // Pre-select all room types
+      ratePlans: [...ratePlans], // Pre-select all rate plans
       chargeType: "per-room",
     }
   );
+
+  // Initialize with all roomTypes and ratePlans when component mounts
+  useEffect(() => {
+    if (!value) {
+      const initialParameters = {
+        id: crypto.randomUUID(),
+        dateRanges: [],
+        roomTypes: [...roomTypes],
+        ratePlans: [...ratePlans],
+        chargeType: "per-room",
+      };
+      setParameters(initialParameters);
+      onChange(initialParameters);
+    }
+  }, []);
+
+  // Update if roomTypes or ratePlans arrays change
+  useEffect(() => {
+    // Only update if there are no selections yet
+    if (parameters.roomTypes.length === 0 && roomTypes.length > 0) {
+      updateParameters({ roomTypes: [...roomTypes] });
+    }
+    if (parameters.ratePlans.length === 0 && ratePlans.length > 0) {
+      updateParameters({ ratePlans: [...ratePlans] });
+    }
+  }, [roomTypes, ratePlans]);
+
+  // Update parameters when value prop changes
+  useEffect(() => {
+    if (value) {
+      setParameters(value);
+    }
+  }, [value]);
 
   const updateParameters = (updates: Partial<ParameterSet>) => {
     const updatedParameters = { ...parameters, ...updates };
@@ -48,10 +79,6 @@ const ParameterBuilder = ({
 
   const handleRatePlanChange = (ratePlans: RatePlan[]) => {
     updateParameters({ ratePlans });
-  };
-
-  const handleChargeTypeChange = (chargeType: ChargeType) => {
-    updateParameters({ chargeType });
   };
 
   return (
@@ -89,30 +116,6 @@ const ParameterBuilder = ({
             placeholder="Select rate plans..."
             emptyMessage="No rate plans found."
           />
-        </div>
-
-        <Separator />
-
-        <div className="space-y-2">
-          <Label>Charge Type</Label>
-          <RadioGroup
-            value={parameters.chargeType}
-            onValueChange={(value) => handleChargeTypeChange(value as ChargeType)}
-            className="flex flex-col space-y-1"
-          >
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="per-room" id="per-room" />
-              <Label htmlFor="per-room" className="font-normal">Per Room</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="per-adult" id="per-adult" />
-              <Label htmlFor="per-adult" className="font-normal">Per Adult</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="per-occupant" id="per-occupant" />
-              <Label htmlFor="per-occupant" className="font-normal">Per Occupant</Label>
-            </div>
-          </RadioGroup>
         </div>
       </CardContent>
     </Card>
