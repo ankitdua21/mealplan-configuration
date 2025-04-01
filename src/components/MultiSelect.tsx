@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Check, ChevronDown, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 
@@ -65,32 +65,33 @@ const MultiSelect = ({
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-full p-0" align="start">
-        {/* Using align="start" to ensure the popover is correctly positioned */}
         <Command>
           <CommandInput placeholder={`Search ${placeholder.toLowerCase()}`} />
-          <CommandEmpty>{emptyMessage}</CommandEmpty>
-          <CommandGroup className="max-h-[200px] overflow-auto">
-            {options.map((option) => {
-              const isSelected = selected.some(
-                (item) => item.id === option.id
-              );
-              return (
-                <CommandItem
-                  key={option.id}
-                  value={option.name}
-                  onSelect={() => handleSelect(option)}
-                >
-                  <Check
-                    className={cn(
-                      "mr-2 h-4 w-4",
-                      isSelected ? "opacity-100" : "opacity-0"
-                    )}
-                  />
-                  {option.name}
-                </CommandItem>
-              );
-            })}
-          </CommandGroup>
+          <CommandList>
+            <CommandEmpty>{emptyMessage}</CommandEmpty>
+            <CommandGroup className="max-h-[200px] overflow-auto">
+              {options && options.length > 0 ? options.map((option) => {
+                const isSelected = selected.some(
+                  (item) => item.id === option.id
+                );
+                return (
+                  <CommandItem
+                    key={option.id}
+                    value={option.name}
+                    onSelect={() => handleSelect(option)}
+                  >
+                    <Check
+                      className={cn(
+                        "mr-2 h-4 w-4",
+                        isSelected ? "opacity-100" : "opacity-0"
+                      )}
+                    />
+                    {option.name}
+                  </CommandItem>
+                );
+              }) : null}
+            </CommandGroup>
+          </CommandList>
         </Command>
       </PopoverContent>
       
