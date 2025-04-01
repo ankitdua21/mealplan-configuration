@@ -26,19 +26,19 @@ const ParameterBuilder = ({
       dateRanges: [],
       roomTypes: [...roomTypes], // Pre-select all room types
       ratePlans: [...ratePlans], // Pre-select all rate plans
-      chargeType: "per-room",
+      chargeType: "per-room" as ChargeType,
     }
   );
 
   // Initialize with all roomTypes and ratePlans when component mounts
   useEffect(() => {
     if (!value) {
-      const initialParameters = {
+      const initialParameters: ParameterSet = {
         id: crypto.randomUUID(),
         dateRanges: [],
         roomTypes: [...roomTypes],
         ratePlans: [...ratePlans],
-        chargeType: "per-room",
+        chargeType: "per-room" as ChargeType,
       };
       setParameters(initialParameters);
       onChange(initialParameters);

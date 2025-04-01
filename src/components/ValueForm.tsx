@@ -101,12 +101,15 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
           
           <div className="space-y-2">
             <Label htmlFor="chargeType">Charge Type</Label>
-            <Select value={chargeType} onValueChange={(value: ChargeType) => {
-              setChargeType(value);
-              if (parameters) {
-                setParameters({...parameters, chargeType: value});
-              }
-            }}>
+            <Select 
+              value={chargeType} 
+              onValueChange={(value: ChargeType) => {
+                setChargeType(value);
+                if (parameters) {
+                  setParameters({...parameters, chargeType: value});
+                }
+              }}
+            >
               <SelectTrigger id="chargeType">
                 <SelectValue placeholder="Select charge type" />
               </SelectTrigger>
