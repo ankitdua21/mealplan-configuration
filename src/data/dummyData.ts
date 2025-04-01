@@ -12,8 +12,8 @@ export const roomTypes: RoomType[] = [
 export const ratePlans: RatePlan[] = [
   { id: "1", name: "Best Available Rate" },
   { id: "2", name: "Advanced Purchase" },
-  { id: "3", name: "Flexible Rate" },
-  { id: "4", name: "Corporate Rate" },
+  { id: "3", name: "Retail Rate" },
+  { id: "4", name: "Package Rate" },
   { id: "5", name: "Weekend Special" },
 ];
 

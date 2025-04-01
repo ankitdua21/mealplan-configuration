@@ -77,42 +77,42 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="space-y-4">
-          <div className="flex space-x-8">
-            <Label htmlFor="amount">Amount</Label>
-            <Label>Charge Type</Label>
+          <div>
+            <Label htmlFor="amount" className="flex items-center">
+              Amount <span className="text-red-500 ml-1">*</span>
+            </Label>
           </div>
           
-          <div className="flex items-start space-x-8">
-            <div>
-              <div className="flex">
-                <Input
-                  id="amount"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  placeholder="0.00"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  className="rounded-r-none w-24"
-                />
-                <Select value={currency} onValueChange={setCurrency}>
-                  <SelectTrigger className="w-20 rounded-l-none border-l-0">
-                    <SelectValue placeholder="USD" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="USD">USD</SelectItem>
-                    <SelectItem value="EUR">EUR</SelectItem>
-                    <SelectItem value="GBP">GBP</SelectItem>
-                    <SelectItem value="JPY">JPY</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+          <div className="flex items-center">
+            <div className="flex">
+              <Input
+                id="amount"
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="0.00"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                className="rounded-r-none w-24"
+                required
+              />
+              <Select value={currency} onValueChange={setCurrency}>
+                <SelectTrigger className="w-20 rounded-l-none border-l-0">
+                  <SelectValue placeholder="USD" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="USD">USD</SelectItem>
+                  <SelectItem value="EUR">EUR</SelectItem>
+                  <SelectItem value="GBP">GBP</SelectItem>
+                  <SelectItem value="JPY">JPY</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             
             <RadioGroup 
               value={parameters?.chargeType || "per-room"} 
               onValueChange={handleChargeTypeChange as (value: string) => void}
-              className="flex space-x-4"
+              className="flex space-x-4 ml-6"
             >
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="per-room" id="per-room" />

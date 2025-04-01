@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -42,10 +41,10 @@ const ConflictResolver = ({ conflicts, values, onResolve, onCancel }: ConflictRe
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle>Parameter Conflicts Detected</CardTitle>
+        <CardTitle>Conflicts Detected</CardTitle>
         <CardDescription>
           We found conflicts in your mealplan values. Please assign priorities to resolve them.
-          Higher priority values will take precedence when there are overlapping parameters.
+          Higher priority values will take precedence when there is overlapping criteria.
         </CardDescription>
       </CardHeader>
       <CardContent>

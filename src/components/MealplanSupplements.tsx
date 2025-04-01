@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -35,7 +36,7 @@ const MealplanSupplements = () => {
       for (let j = i + 1; j < values.length; j++) {
         const value1 = values[i];
         const value2 = values[j];
-        const conflictingParameters: Array<keyof Omit<typeof value1.parameters, 'id' | 'condition'>> = [];
+        const conflictingParameters: Array<keyof Omit<typeof value1.parameters, 'id' | 'condition' | 'chargeType'>> = [];
         
         const dateRanges1 = value1.parameters.dateRanges;
         const dateRanges2 = value2.parameters.dateRanges;
@@ -106,11 +107,9 @@ const MealplanSupplements = () => {
           conflictingParameters.push("ratePlans");
         }
         
-        if (value1.parameters.chargeType === value2.parameters.chargeType) {
-          conflictingParameters.push("chargeType");
-        }
+        // Removed chargeType conflict check as requested
         
-        if (conflictingParameters.length === 4) {
+        if (conflictingParameters.length === 3) { // Changed from 4 to 3 since we removed chargeType
           conflicts.push({
             valueIds: [value1.id, value2.id],
             conflictingParameters,
@@ -126,7 +125,16 @@ const MealplanSupplements = () => {
     if (!description) {
       toast({
         title: "Error",
-        description: "Please enter a mealplan description",
+        description: "Please enter a mealplan name",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (values.length === 0) {
+      toast({
+        title: "Error",
+        description: "Please add at least one value",
         variant: "destructive",
       });
       return;
@@ -193,7 +201,7 @@ const MealplanSupplements = () => {
               <CardTitle>Configure New Supplement</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex flex-wrap gap-4 mb-6">
+              <div className="flex gap-4 mb-6">
                 {supplementTypes.map((type) => (
                   <Button
                     key={type.id}
@@ -210,13 +218,16 @@ const MealplanSupplements = () => {
               
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="description">Mealplan Description</Label>
+                  <Label htmlFor="description" className="flex items-center">
+                    Mealplan Name <span className="text-red-500 ml-1">*</span>
+                  </Label>
                   <Textarea
                     id="description"
                     placeholder="Describe the mealplan (e.g., 'Continental breakfast served from 7-10 AM')"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     className="mt-1"
+                    required
                   />
                 </div>
               </div>
