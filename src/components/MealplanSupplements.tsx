@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Info } from "lucide-react";
 import { Conflict, Supplement, SupplementValue } from "@/models/SupplementTypes";
 import { roomTypes, ratePlans, supplementTypes } from "@/data/dummyData";
 import ValueForm from "./ValueForm";
@@ -17,7 +18,7 @@ const MealplanSupplements = () => {
   const { toast } = useToast();
   const [description, setDescription] = useState("");
   const [values, setValues] = useState<SupplementValue[]>([]);
-  const [savedSupplement, setSavedSupplement] = useState<Supplement | null>(null);
+  const [savedSupplements, setSavedSupplements] = useState<Supplement[]>([]);
   const [conflicts, setConflicts] = useState<Conflict[]>([]);
   const [showConflictResolver, setShowConflictResolver] = useState(false);
 
@@ -107,9 +108,9 @@ const MealplanSupplements = () => {
           conflictingParameters.push("ratePlans");
         }
         
-        // Removed chargeType conflict check as requested
+        // Removed chargeType conflict check as previously requested
         
-        if (conflictingParameters.length === 3) { // Changed from 4 to 3 since we removed chargeType
+        if (conflictingParameters.length === 3) {
           conflicts.push({
             valueIds: [value1.id, value2.id],
             conflictingParameters,
@@ -160,12 +161,13 @@ const MealplanSupplements = () => {
       values: valuesToSave,
     };
     
-    setSavedSupplement(supplement);
+    setSavedSupplements(prev => [...prev, supplement]);
     toast({
       title: "Success",
       description: "Mealplan supplement has been saved successfully.",
     });
     
+    // Clear form for next supplement
     setDescription("");
     setValues([]);
     setConflicts([]);
@@ -180,10 +182,23 @@ const MealplanSupplements = () => {
     <div className="container mx-auto py-8 px-4 max-w-6xl">
       <h1 className="text-2xl font-bold mb-6">Hotel Supplements Configuration</h1>
       
-      {savedSupplement && (
+      {savedSupplements.length > 0 && (
         <div className="mb-8">
-          <h2 className="text-xl font-semibold mb-4">Saved Supplements</h2>
-          <SavedSupplement supplement={savedSupplement} />
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold">Your Saved Mealplans</h2>
+            <Button 
+              variant="outline" 
+              onClick={() => setSavedSupplements([])}
+              className="text-sm"
+            >
+              Clear All
+            </Button>
+          </div>
+          <div className="space-y-4">
+            {savedSupplements.map(supplement => (
+              <SavedSupplement key={supplement.id} supplement={supplement} />
+            ))}
+          </div>
         </div>
       )}
       
@@ -198,7 +213,15 @@ const MealplanSupplements = () => {
         <div className="space-y-8">
           <Card>
             <CardHeader>
-              <CardTitle>Configure New Supplement</CardTitle>
+              <div className="flex justify-between items-center">
+                <CardTitle>Configure New Supplement</CardTitle>
+                {savedSupplements.length > 0 && (
+                  <div className="text-sm text-muted-foreground flex items-center">
+                    <Info size={16} className="mr-1" />
+                    You can create multiple mealplan supplements
+                  </div>
+                )}
+              </div>
             </CardHeader>
             <CardContent>
               <div className="flex gap-4 mb-6">
@@ -254,6 +277,19 @@ const MealplanSupplements = () => {
               Save Mealplan
             </Button>
           </div>
+          
+          {savedSupplements.length === 0 && (
+            <div className="border border-dashed border-gray-300 rounded-lg p-6 mt-6">
+              <div className="flex items-center justify-center flex-col text-center">
+                <Info size={24} className="text-gray-400 mb-2" />
+                <h3 className="text-lg font-medium mb-1">Create Multiple Mealplans</h3>
+                <p className="text-muted-foreground max-w-md">
+                  You can create multiple different mealplan supplements. After saving each mealplan, 
+                  the form will reset so you can configure another one.
+                </p>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -261,3 +297,4 @@ const MealplanSupplements = () => {
 };
 
 export default MealplanSupplements;
+
