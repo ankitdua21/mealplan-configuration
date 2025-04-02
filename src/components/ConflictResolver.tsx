@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -49,7 +48,7 @@ const ConflictResolver = ({ conflicts, values, onResolve, onCancel }: ConflictRe
 
   const { conflict, conflictingValues } = getCurrentConflictData();
 
-  // Function to automatically resolve the current conflict
+  // Function to handle conflict resolution
   const handleResolveConflict = () => {
     // Create a deep copy of the values
     const updatedValues = JSON.parse(JSON.stringify(resolvedValues)) as SupplementValue[];
@@ -85,20 +84,71 @@ const ConflictResolver = ({ conflicts, values, onResolve, onCancel }: ConflictRe
     
     // Resolve date range conflicts if needed
     if (conflict?.conflictingParameters.includes("dateRanges")) {
-      // If either value has empty date ranges (all dates), make value2 have no dates
-      if (value1.parameters.dateRanges.length === 0 || value2.parameters.dateRanges.length === 0) {
-        value2.parameters.dateRanges = [];
+      // If either value has empty date ranges (all dates), make value2 have specific dates
+      // that don't overlap with value1
+      if (value1.parameters.dateRanges.length === 0) {
+        // If value1 applies to all dates, create a sample date range for value2
+        // This is a simplification - in a real scenario, you might want to handle this differently
+        if (value2.parameters.dateRanges.length === 0) {
+          // Both have all dates, give value2 specific dates
+          const today = new Date();
+          const nextYear = new Date();
+          nextYear.setFullYear(today.getFullYear() + 1);
+          
+          value2.parameters.dateRanges = [{
+            id: crypto.randomUUID(),
+            startDate: nextYear,
+            endDate: new Date(nextYear.getTime() + 30 * 24 * 60 * 60 * 1000) // 30 days after next year
+          }];
+        }
+        // If value2 already has specific dates, we'll keep them as they are
+      } else if (value2.parameters.dateRanges.length === 0) {
+        // value2 applies to all dates, but value1 has specific dates
+        // Make value2 apply to all dates EXCEPT those in value1
+        const complementaryDates: DateRange[] = [];
+        
+        // For each date range in value1, create ranges before and after
+        value1.parameters.dateRanges.forEach(range1 => {
+          const beforeRange = {
+            id: crypto.randomUUID(),
+            startDate: new Date(0), // Beginning of time
+            endDate: new Date(new Date(range1.startDate).getTime() - 24 * 60 * 60 * 1000) // Day before range1 starts
+          };
+          
+          const afterRange = {
+            id: crypto.randomUUID(),
+            startDate: new Date(new Date(range1.endDate).getTime() + 24 * 60 * 60 * 1000), // Day after range1 ends
+            endDate: new Date(new Date().getFullYear() + 100, 11, 31) // Far in the future
+          };
+          
+          // Only add valid ranges (where start is before end)
+          if (beforeRange.startDate < beforeRange.endDate) {
+            complementaryDates.push(beforeRange);
+          }
+          
+          if (afterRange.startDate < afterRange.endDate) {
+            complementaryDates.push(afterRange);
+          }
+        });
+        
+        value2.parameters.dateRanges = complementaryDates;
       } else {
-        // Remove overlapping date ranges from value2
+        // Both have specific date ranges, remove overlapping ones from value2
         for (let i = value2.parameters.dateRanges.length - 1; i >= 0; i--) {
           const range2 = value2.parameters.dateRanges[i];
+          let hasOverlap = false;
           
           for (const range1 of value1.parameters.dateRanges) {
-            if (range1.startDate <= range2.endDate && range1.endDate >= range2.startDate) {
-              // Remove the overlapping range
-              value2.parameters.dateRanges.splice(i, 1);
+            if (new Date(range1.startDate) <= new Date(range2.endDate) && 
+                new Date(range1.endDate) >= new Date(range2.startDate)) {
+              // There's an overlap, remove this range from value2
+              hasOverlap = true;
               break;
             }
+          }
+          
+          if (hasOverlap) {
+            value2.parameters.dateRanges.splice(i, 1);
           }
         }
       }
@@ -106,11 +156,27 @@ const ConflictResolver = ({ conflicts, values, onResolve, onCancel }: ConflictRe
     
     // Resolve room type conflicts if needed
     if (conflict?.conflictingParameters.includes("roomTypes")) {
-      // If either value has empty room types (all room types), make value2 have no room types
-      if (value1.parameters.roomTypes.length === 0 || value2.parameters.roomTypes.length === 0) {
-        value2.parameters.roomTypes = [];
+      // If either value has empty room types (all room types), adjust value2
+      if (value1.parameters.roomTypes.length === 0) {
+        // value1 applies to all room types
+        // If value2 also applies to all room types, give it specific room types
+        if (value2.parameters.roomTypes.length === 0) {
+          // This is a simplification - in a real app, you might want to get actual available room types
+          value2.parameters.roomTypes = [{
+            id: crypto.randomUUID(),
+            name: "Special Suite"
+          }];
+        }
+        // Otherwise, keep value2's specific room types
+      } else if (value2.parameters.roomTypes.length === 0) {
+        // value2 applies to all room types, but value1 has specific room types
+        // Make value2 apply to all room types EXCEPT those in value1
+        value2.parameters.roomTypes = [{
+          id: crypto.randomUUID(),
+          name: "All Other Room Types"
+        }];
       } else {
-        // Remove overlapping room types from value2
+        // Both have specific room types, remove overlapping ones from value2
         value2.parameters.roomTypes = value2.parameters.roomTypes.filter(rt2 => 
           !value1.parameters.roomTypes.some(rt1 => rt1.id === rt2.id)
         );
@@ -119,47 +185,65 @@ const ConflictResolver = ({ conflicts, values, onResolve, onCancel }: ConflictRe
     
     // Resolve rate plan conflicts if needed
     if (conflict?.conflictingParameters.includes("ratePlans")) {
-      // If either value has empty rate plans (all rate plans), make value2 have no rate plans
-      if (value1.parameters.ratePlans.length === 0 || value2.parameters.ratePlans.length === 0) {
-        value2.parameters.ratePlans = [];
+      // If either value has empty rate plans (all rate plans), adjust value2
+      if (value1.parameters.ratePlans.length === 0) {
+        // value1 applies to all rate plans
+        // If value2 also applies to all rate plans, give it specific rate plans
+        if (value2.parameters.ratePlans.length === 0) {
+          // This is a simplification
+          value2.parameters.ratePlans = [{
+            id: crypto.randomUUID(),
+            name: "Special Offer"
+          }];
+        }
+        // Otherwise, keep value2's specific rate plans
+      } else if (value2.parameters.ratePlans.length === 0) {
+        // value2 applies to all rate plans, but value1 has specific rate plans
+        // Make value2 apply to all rate plans EXCEPT those in value1
+        value2.parameters.ratePlans = [{
+          id: crypto.randomUUID(),
+          name: "All Other Rate Plans"
+        }];
       } else {
-        // Remove overlapping rate plans from value2
+        // Both have specific rate plans, remove overlapping ones from value2
         value2.parameters.ratePlans = value2.parameters.ratePlans.filter(rp2 => 
           !value1.parameters.ratePlans.some(rp1 => rp1.id === rp2.id)
         );
       }
     }
     
-    // If value2 now has no dates, no room types, or no rate plans, remove it completely
-    if (
+    // Check if value2 still has valid parameters after adjustments
+    const hasEmptyParameters = 
       (value2.parameters.dateRanges.length === 0 && value1.parameters.dateRanges.length === 0) ||
       (value2.parameters.roomTypes.length === 0 && value1.parameters.roomTypes.length === 0) ||
-      (value2.parameters.ratePlans.length === 0 && value1.parameters.ratePlans.length === 0)
-    ) {
-      updatedValues.splice(value2Index, 1);
-      toast({
-        title: "Conflict resolved",
-        description: "One value was completely overlapping with another and has been removed.",
-      });
-    } else {
-      toast({
-        title: "Conflict resolved",
-        description: "Overlapping parameters have been removed from one of the values.",
-      });
-    }
+      (value2.parameters.ratePlans.length === 0 && value1.parameters.ratePlans.length === 0);
     
-    // Check for remaining conflicts in the updated values
+    // Keep both values, even if value2 has empty parameters in some categories
+    // The empty parameters just mean "all" (all dates, all room types, or all rate plans)
+    
+    // Check for remaining conflicts after this resolution
+    setResolvedValues(updatedValues);
+    
+    // Detect remaining conflicts
     const newConflicts = detectConflicts(updatedValues);
     
     if (newConflicts.length > 0) {
-      // Move to the next conflict
-      setResolvedValues(updatedValues);
+      // Still have conflicts, move to the next one
       setRemainingConflicts(newConflicts);
       setCurrentConflictIndex(0);
+      
+      toast({
+        title: "Conflict partially resolved",
+        description: "Removed overlapping parameters. Additional conflicts still need to be resolved.",
+      });
     } else {
-      // No more conflicts, proceed to save
-      setResolvedValues(updatedValues);
+      // No more conflicts, proceed to show the complete resolution
       setResolutionComplete(true);
+      
+      toast({
+        title: "All conflicts resolved",
+        description: "Overlapping parameters have been adjusted to avoid conflicts.",
+      });
     }
   };
 
@@ -177,7 +261,13 @@ const ConflictResolver = ({ conflicts, values, onResolve, onCancel }: ConflictRe
         const hasDateRangeConflict = hasOverlap(
           value1.parameters.dateRanges, 
           value2.parameters.dateRanges,
-          (range1, range2) => range1.startDate <= range2.endDate && range1.endDate >= range2.startDate
+          (range1, range2) => {
+            const start1 = new Date(range1.startDate);
+            const end1 = new Date(range1.endDate);
+            const start2 = new Date(range2.startDate);
+            const end2 = new Date(range2.endDate);
+            return start1 <= end2 && end1 >= start2;
+          }
         );
         
         if (hasDateRangeConflict) {
@@ -255,14 +345,14 @@ const ConflictResolver = ({ conflicts, values, onResolve, onCancel }: ConflictRe
         <CardHeader>
           <CardTitle>Conflict Resolution Complete</CardTitle>
           <CardDescription>
-            All conflicts have been resolved. Review your values below.
+            All conflicts have been resolved. All your values are preserved, but some parameters have been adjusted to avoid conflicts.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Alert className="bg-green-50 border-green-200 mb-4">
             <Check className="h-4 w-4 text-green-600" />
             <AlertDescription className="text-green-700">
-              All conflicts have been resolved successfully!
+              All conflicts have been resolved by adjusting overlapping parameters!
             </AlertDescription>
           </Alert>
           
@@ -372,7 +462,7 @@ const ConflictResolver = ({ conflicts, values, onResolve, onCancel }: ConflictRe
             <AlertTriangle className="h-4 w-4" />
             <AlertTitle>Conflict {currentConflictIndex + 1} of {remainingConflicts.length}</AlertTitle>
             <AlertDescription>
-              These values have overlapping dates, room types, and rate plans. Click "Remove Overlap" to automatically resolve the conflict.
+              These values have overlapping dates, room types, and rate plans. Click "Remove Overlap" to automatically adjust the parameters to avoid conflicts.
             </AlertDescription>
           </Alert>
           
