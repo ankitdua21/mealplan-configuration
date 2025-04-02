@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Check, AlertTriangle } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
+import SavedSupplement from "./SavedSupplement";
 
 interface ConflictResolverProps {
   conflicts: Conflict[];
@@ -20,6 +22,7 @@ const ConflictResolver = ({ conflicts, values, onResolve, onCancel }: ConflictRe
   const [resolvedValues, setResolvedValues] = useState<SupplementValue[]>([...values]);
   const [remainingConflicts, setRemainingConflicts] = useState<Conflict[]>([...conflicts]);
   const [currentConflictIndex, setCurrentConflictIndex] = useState<number>(0);
+  const [resolutionComplete, setResolutionComplete] = useState(false);
   const { toast } = useToast();
 
   // Reset conflict resolution when component mounts or when conflicts change
@@ -27,34 +30,8 @@ const ConflictResolver = ({ conflicts, values, onResolve, onCancel }: ConflictRe
     setResolvedValues([...values]);
     setRemainingConflicts([...conflicts]);
     setCurrentConflictIndex(0);
+    setResolutionComplete(false);
   }, [conflicts, values]);
-
-  // If there's no conflict or no values to resolve, redirect to completion
-  if (remainingConflicts.length === 0) {
-    return (
-      <Card className="w-full">
-        <CardHeader>
-          <CardTitle>Conflict Resolution</CardTitle>
-          <CardDescription>
-            All conflicts have been resolved.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Alert className="bg-green-50 border-green-200 mb-4">
-            <Check className="h-4 w-4 text-green-600" />
-            <AlertDescription className="text-green-700">
-              All conflicts have been resolved successfully!
-            </AlertDescription>
-          </Alert>
-        </CardContent>
-        <CardFooter className="flex justify-end space-x-2">
-          <Button onClick={() => onResolve(resolvedValues)}>
-            Save Mealplan
-          </Button>
-        </CardFooter>
-      </Card>
-    );
-  }
 
   // Get current conflict and conflicting values
   const getCurrentConflictData = () => {
@@ -71,19 +48,6 @@ const ConflictResolver = ({ conflicts, values, onResolve, onCancel }: ConflictRe
   };
 
   const { conflict, conflictingValues } = getCurrentConflictData();
-  
-  if (!conflict || conflictingValues.length < 2) {
-    return (
-      <Card className="w-full">
-        <CardHeader>
-          <CardTitle>Processing Conflicts</CardTitle>
-          <CardDescription>
-            Please wait...
-          </CardDescription>
-        </CardHeader>
-      </Card>
-    );
-  }
 
   // Function to automatically resolve the current conflict
   const handleResolveConflict = () => {
@@ -91,9 +55,18 @@ const ConflictResolver = ({ conflicts, values, onResolve, onCancel }: ConflictRe
     const updatedValues = JSON.parse(JSON.stringify(resolvedValues)) as SupplementValue[];
     
     // Get values to adjust
-    const value1Id = conflict.valueIds[0];
-    const value2Id = conflict.valueIds[1];
+    const value1Id = conflict?.valueIds[0];
+    const value2Id = conflict?.valueIds[1];
     
+    if (!value1Id || !value2Id) {
+      toast({
+        title: "Error",
+        description: "Could not find conflict information",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const value1Index = updatedValues.findIndex(v => v.id === value1Id);
     const value2Index = updatedValues.findIndex(v => v.id === value2Id);
     
@@ -111,7 +84,7 @@ const ConflictResolver = ({ conflicts, values, onResolve, onCancel }: ConflictRe
     const value2 = updatedValues[value2Index];
     
     // Resolve date range conflicts if needed
-    if (conflict.conflictingParameters.includes("dateRanges")) {
+    if (conflict?.conflictingParameters.includes("dateRanges")) {
       // If either value has empty date ranges (all dates), make value2 have no dates
       if (value1.parameters.dateRanges.length === 0 || value2.parameters.dateRanges.length === 0) {
         value2.parameters.dateRanges = [];
@@ -132,7 +105,7 @@ const ConflictResolver = ({ conflicts, values, onResolve, onCancel }: ConflictRe
     }
     
     // Resolve room type conflicts if needed
-    if (conflict.conflictingParameters.includes("roomTypes")) {
+    if (conflict?.conflictingParameters.includes("roomTypes")) {
       // If either value has empty room types (all room types), make value2 have no room types
       if (value1.parameters.roomTypes.length === 0 || value2.parameters.roomTypes.length === 0) {
         value2.parameters.roomTypes = [];
@@ -145,7 +118,7 @@ const ConflictResolver = ({ conflicts, values, onResolve, onCancel }: ConflictRe
     }
     
     // Resolve rate plan conflicts if needed
-    if (conflict.conflictingParameters.includes("ratePlans")) {
+    if (conflict?.conflictingParameters.includes("ratePlans")) {
       // If either value has empty rate plans (all rate plans), make value2 have no rate plans
       if (value1.parameters.ratePlans.length === 0 || value2.parameters.ratePlans.length === 0) {
         value2.parameters.ratePlans = [];
@@ -185,7 +158,8 @@ const ConflictResolver = ({ conflicts, values, onResolve, onCancel }: ConflictRe
       setCurrentConflictIndex(0);
     } else {
       // No more conflicts, proceed to save
-      onResolve(updatedValues);
+      setResolvedValues(updatedValues);
+      setResolutionComplete(true);
     }
   };
 
@@ -273,6 +247,116 @@ const ConflictResolver = ({ conflicts, values, onResolve, onCancel }: ConflictRe
       default: return chargeType;
     }
   };
+
+  // If resolution is complete, show all resolved values
+  if (resolutionComplete) {
+    return (
+      <Card className="w-full">
+        <CardHeader>
+          <CardTitle>Conflict Resolution Complete</CardTitle>
+          <CardDescription>
+            All conflicts have been resolved. Review your values below.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Alert className="bg-green-50 border-green-200 mb-4">
+            <Check className="h-4 w-4 text-green-600" />
+            <AlertDescription className="text-green-700">
+              All conflicts have been resolved successfully!
+            </AlertDescription>
+          </Alert>
+          
+          <div className="space-y-4 mt-4">
+            <h3 className="text-lg font-medium">Your Values</h3>
+            {resolvedValues.map((value, idx) => (
+              <Card key={value.id} className="overflow-hidden">
+                <CardHeader className="bg-muted/50 py-3">
+                  <CardTitle className="text-base">Value {idx + 1}</CardTitle>
+                </CardHeader>
+                <CardContent className="p-4">
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="font-medium">Amount:</span>
+                      <span>{value.amount} {value.currency}</span>
+                    </div>
+                    
+                    <div className="flex justify-between">
+                      <span className="font-medium">Charge Type:</span>
+                      <span>{getChargeTypeDisplay(value.parameters.chargeType)}</span>
+                    </div>
+                    
+                    <div>
+                      <span className="font-medium block mb-1">Date Ranges:</span>
+                      <div className="flex flex-wrap gap-1">
+                        {value.parameters.dateRanges.length > 0 ? (
+                          value.parameters.dateRanges.map((range, i) => (
+                            <Badge key={i} variant="outline" className="text-xs">
+                              {format(new Date(range.startDate), "MMM d, yyyy")} - {format(new Date(range.endDate), "MMM d, yyyy")}
+                            </Badge>
+                          ))
+                        ) : (
+                          <span className="text-muted-foreground">All dates</span>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <span className="font-medium block mb-1">Room Types:</span>
+                      <div className="flex flex-wrap gap-1">
+                        {value.parameters.roomTypes.length === 0 ? (
+                          <span className="text-muted-foreground">All room types</span>
+                        ) : (
+                          value.parameters.roomTypes.map((type) => (
+                            <Badge key={type.id} variant="outline" className="text-xs">
+                              {type.name}
+                            </Badge>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <span className="font-medium block mb-1">Rate Plans:</span>
+                      <div className="flex flex-wrap gap-1">
+                        {value.parameters.ratePlans.length === 0 ? (
+                          <span className="text-muted-foreground">All rate plans</span>
+                        ) : (
+                          value.parameters.ratePlans.map((plan) => (
+                            <Badge key={plan.id} variant="outline" className="text-xs">
+                              {plan.name}
+                            </Badge>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </CardContent>
+        <CardFooter className="flex justify-end space-x-2">
+          <Button onClick={() => onResolve(resolvedValues)}>
+            Save Mealplan
+          </Button>
+        </CardFooter>
+      </Card>
+    );
+  }
+
+  // If there's no conflict or no values to resolve, redirect to completion
+  if (!conflict || conflictingValues.length < 2) {
+    return (
+      <Card className="w-full">
+        <CardHeader>
+          <CardTitle>Processing Conflicts</CardTitle>
+          <CardDescription>
+            Please wait...
+          </CardDescription>
+        </CardHeader>
+      </Card>
+    );
+  }
 
   return (
     <Card className="w-full">
