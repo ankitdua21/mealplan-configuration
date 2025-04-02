@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { AlertTriangle } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 
 interface ConflictResolverProps {
   conflicts: Conflict[];
@@ -362,7 +364,7 @@ const ConflictResolver = ({ conflicts, values, onResolve, onCancel }: ConflictRe
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Value</TableHead>
+                <TableHead>Description</TableHead>
                 <TableHead>Amount</TableHead>
                 <TableHead>Date Ranges</TableHead>
                 <TableHead>Room Types</TableHead>
@@ -373,7 +375,18 @@ const ConflictResolver = ({ conflicts, values, onResolve, onCancel }: ConflictRe
             <TableBody>
               {conflictingValues.map((value, valueIdx) => (
                 <TableRow key={value.id}>
-                  <TableCell className="font-medium">Value {valueIdx + 1}</TableCell>
+                  <TableCell className="max-w-[200px]">
+                    <HoverCard>
+                      <HoverCardTrigger asChild>
+                        <span className="block truncate font-medium cursor-help">
+                          {value.parameters.description || "No description"}
+                        </span>
+                      </HoverCardTrigger>
+                      <HoverCardContent className="w-80">
+                        <p>{value.parameters.description || "No description"}</p>
+                      </HoverCardContent>
+                    </HoverCard>
+                  </TableCell>
                   <TableCell>
                     {value.amount} {value.currency}
                   </TableCell>
