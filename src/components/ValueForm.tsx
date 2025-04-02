@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -176,7 +177,7 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
   };
 
   return (
-    <Card>
+    <Card id="valueForm">
       <CardHeader>
         <CardTitle className="text-lg">Add Mealplan Value</CardTitle>
       </CardHeader>

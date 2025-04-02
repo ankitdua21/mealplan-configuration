@@ -1,10 +1,11 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Info } from "lucide-react";
+import { Info, Check, Plus } from "lucide-react";
 import { Conflict, Supplement, SupplementValue } from "@/models/SupplementTypes";
 import { roomTypes, ratePlans, supplementTypes } from "@/data/dummyData";
 import ValueForm from "./ValueForm";
@@ -12,6 +13,7 @@ import ValueList from "./ValueList";
 import ConflictResolver from "./ConflictResolver";
 import SavedSupplement from "./SavedSupplement";
 import { useToast } from "@/hooks/use-toast";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const MealplanSupplements = () => {
   const { toast } = useToast();
@@ -21,14 +23,22 @@ const MealplanSupplements = () => {
   const [conflicts, setConflicts] = useState<Conflict[]>([]);
   const [showConflictResolver, setShowConflictResolver] = useState(false);
   const [currentValue, setCurrentValue] = useState<SupplementValue | null>(null);
+  const [showAddMorePrompt, setShowAddMorePrompt] = useState(false);
 
   const handleAddValue = (value: SupplementValue) => {
     setValues((prev) => [...prev, value]);
     setCurrentValue(null);
+    setShowAddMorePrompt(true);
+    
+    toast({
+      title: "Value added",
+      description: "You can add more values or save your mealplan.",
+    });
   };
 
   const handleRemoveValue = (id: string) => {
     setValues((prev) => prev.filter((v) => v.id !== id));
+    setShowAddMorePrompt(values.length > 1);
   };
 
   const detectConflicts = (values: SupplementValue[]): Conflict[] => {
@@ -183,6 +193,7 @@ const MealplanSupplements = () => {
     setCurrentValue(null);
     setConflicts([]);
     setShowConflictResolver(false);
+    setShowAddMorePrompt(false);
   };
 
   const handleResolveConflicts = (resolvedValues: SupplementValue[]) => {
@@ -250,7 +261,7 @@ const MealplanSupplements = () => {
               
               <Separator className="my-6" />
               
-              <div className="max-w-xl mx-auto">
+              <div className="mx-auto">
                 <div>
                   <Label htmlFor="description" className="flex items-center text-base font-medium">
                     Mealplan Name <span className="text-red-500 ml-1">*</span>
@@ -275,7 +286,28 @@ const MealplanSupplements = () => {
           />
           
           {values.length > 0 && (
-            <ValueList values={values} onRemove={handleRemoveValue} />
+            <>
+              <ValueList values={values} onRemove={handleRemoveValue} />
+              
+              {showAddMorePrompt && (
+                <Alert className="bg-green-50 border-green-200">
+                  <Check className="h-4 w-4 text-green-600" />
+                  <AlertDescription className="text-green-700 flex justify-between items-center">
+                    <span>Value added successfully! You can add more values or save your mealplan.</span>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="ml-4 border-green-300 text-green-700"
+                      onClick={() => {
+                        document.getElementById('valueForm')?.scrollIntoView({ behavior: 'smooth' });
+                      }}
+                    >
+                      <Plus className="h-4 w-4 mr-1" /> Add Another Value
+                    </Button>
+                  </AlertDescription>
+                </Alert>
+              )}
+            </>
           )}
           
           <div className="flex justify-end">
@@ -283,7 +315,7 @@ const MealplanSupplements = () => {
               size="lg"
               className="bg-green-500 hover:bg-green-600"
               onClick={handleSave}
-              disabled={!description}
+              disabled={!description || (values.length === 0 && !currentValue)}
             >
               Save Mealplan
             </Button>

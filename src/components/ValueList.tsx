@@ -75,7 +75,7 @@ const ValueList = ({
       }
       
       return `Per Adult/Child (${details.join(", ")})`;
-    } else {
+    } else if (value.parameters.chargeType === "per-occupant") {
       const occupantAmounts = value.parameters.occupantAmounts;
       if (!occupantAmounts || !occupantAmounts.occupancyPricing) return "Per Occupant";
       
@@ -87,6 +87,8 @@ const ValueList = ({
         ? `Per Occupant (${pricing.join(", ")})`
         : "Per Occupant";
     }
+    
+    return value.parameters.chargeType;
   };
 
   return (
