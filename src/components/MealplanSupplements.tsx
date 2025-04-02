@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -30,10 +29,7 @@ const MealplanSupplements = () => {
     setCurrentValue(null);
     setShowAddMorePrompt(true);
     
-    toast({
-      title: "Value added",
-      description: "You can add more values or save your mealplan.",
-    });
+    // Toast message removed as requested
   };
 
   const handleRemoveValue = (id: string) => {
@@ -286,28 +282,7 @@ const MealplanSupplements = () => {
           />
           
           {values.length > 0 && (
-            <>
-              <ValueList values={values} onRemove={handleRemoveValue} />
-              
-              {showAddMorePrompt && (
-                <Alert className="bg-green-50 border-green-200">
-                  <Check className="h-4 w-4 text-green-600" />
-                  <AlertDescription className="text-green-700 flex justify-between items-center">
-                    <span>Value added successfully! You can add more values or save your mealplan.</span>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="ml-4 border-green-300 text-green-700"
-                      onClick={() => {
-                        document.getElementById('valueForm')?.scrollIntoView({ behavior: 'smooth' });
-                      }}
-                    >
-                      <Plus className="h-4 w-4 mr-1" /> Add Another Value
-                    </Button>
-                  </AlertDescription>
-                </Alert>
-              )}
-            </>
+            <ValueList values={values} onRemove={handleRemoveValue} />
           )}
           
           <div className="flex justify-end">

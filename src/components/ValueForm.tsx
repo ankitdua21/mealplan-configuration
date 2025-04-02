@@ -55,14 +55,12 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
   }, [roomTypes, ratePlans]);
 
   const handleAddValue = () => {
-    if (!parameters) return;
+    if (!parameters || !description.trim()) return;
 
     let updatedParameters = { ...parameters, chargeType };
     
     // Add description if provided
-    if (description.trim()) {
-      updatedParameters.description = description;
-    }
+    updatedParameters.description = description;
     
     // Add charge type specific amounts
     if (chargeType === "per-room") {
@@ -185,15 +183,16 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
         <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="description" className="text-sm">
-                Description
+              <Label htmlFor="description" className="text-sm flex items-center">
+                Description <span className="text-red-500 ml-1">*</span>
               </Label>
               <Textarea
                 id="description"
-                placeholder="Optional description"
+                placeholder="Enter description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 className="h-20 mt-1"
+                required
               />
             </div>
             <div>
@@ -515,7 +514,8 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
         <div className="flex justify-start">
           <Button 
             onClick={handleAddValue}
-            disabled={(chargeType === "per-room" && !baseAmount) || 
+            disabled={!description.trim() || 
+                     (chargeType === "per-room" && !baseAmount) || 
                      (chargeType === "per-adult-child" && !adultAmount) ||
                      (chargeType === "per-occupant" && occupancyPricing.every(p => !p.amount))}
           >

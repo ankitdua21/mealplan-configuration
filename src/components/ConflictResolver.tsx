@@ -1,13 +1,12 @@
-import { useState, useEffect } from "react";
+
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Conflict, SupplementValue, DateRange, RoomType, RatePlan } from "@/models/SupplementTypes";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { AlertTriangle } from "lucide-react";
-import { format } from "date-fns";
-import { useToast } from "@/hooks/use-toast";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+import { Conflict, SupplementValue } from "@/models/SupplementTypes";
+import { Info } from "lucide-react";
 
 interface ConflictResolverProps {
   conflicts: Conflict[];
@@ -17,429 +16,208 @@ interface ConflictResolverProps {
 }
 
 const ConflictResolver = ({ conflicts, values, onResolve, onCancel }: ConflictResolverProps) => {
-  const [resolvedValues, setResolvedValues] = useState<SupplementValue[]>([...values]);
-  const [remainingConflicts, setRemainingConflicts] = useState<Conflict[]>([...conflicts]);
-  const [currentConflictIndex, setCurrentConflictIndex] = useState<number>(0);
-  const { toast } = useToast();
-
-  // Reset conflict resolution when component mounts or when conflicts change
-  useEffect(() => {
-    setResolvedValues([...values]);
-    setRemainingConflicts([...conflicts]);
-    setCurrentConflictIndex(0);
-  }, [conflicts, values]);
-
-  // Get current conflict and conflicting values
-  const getCurrentConflictData = () => {
-    if (remainingConflicts.length === 0) return { conflict: null, conflictingValues: [] };
-    
-    const conflict = remainingConflicts[currentConflictIndex];
-    if (!conflict) return { conflict: null, conflictingValues: [] };
-    
-    const conflictingValues = conflict.valueIds.map(id => 
-      resolvedValues.find(v => v.id === id)
-    ).filter(Boolean) as SupplementValue[];
-    
-    return { conflict, conflictingValues };
+  const [resolutions, setResolutions] = useState<Record<string, string>>({});
+  
+  const getValueById = (id: string) => values.find(v => v.id === id);
+  
+  const handleResolutionChange = (conflictKey: string, valueId: string) => {
+    setResolutions(prev => ({
+      ...prev,
+      [conflictKey]: valueId
+    }));
   };
-
-  const { conflict, conflictingValues } = getCurrentConflictData();
-
-  // Function to handle conflict resolution
-  const handleResolveConflict = () => {
-    // Create a deep copy of the values
-    const updatedValues = JSON.parse(JSON.stringify(resolvedValues)) as SupplementValue[];
+  
+  const isAllResolved = () => {
+    return conflicts.every(conflict => {
+      const conflictKey = conflict.valueIds.join('-');
+      return resolutions[conflictKey];
+    });
+  };
+  
+  const handleResolve = () => {
+    const resolvedValues = [...values];
     
-    // Get values to adjust
-    const value1Id = conflict?.valueIds[0];
-    const value2Id = conflict?.valueIds[1];
-    
-    if (!value1Id || !value2Id) {
-      toast({
-        title: "Error",
-        description: "Could not find conflict information",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const value1Index = updatedValues.findIndex(v => v.id === value1Id);
-    const value2Index = updatedValues.findIndex(v => v.id === value2Id);
-    
-    if (value1Index === -1 || value2Index === -1) {
-      toast({
-        title: "Error",
-        description: "Could not find the conflicting values",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    // Keep value1 but modify value2 to avoid overlaps
-    const value1 = updatedValues[value1Index];
-    const value2 = updatedValues[value2Index];
-    
-    // Resolve date range conflicts if needed
-    if (conflict?.conflictingParameters.includes("dateRanges")) {
-      // If either value has empty date ranges (all dates), make value2 have specific dates
-      // that don't overlap with value1
-      if (value1.parameters.dateRanges.length === 0) {
-        // If value1 applies to all dates, create a sample date range for value2
-        // This is a simplification - in a real scenario, you might want to handle this differently
-        if (value2.parameters.dateRanges.length === 0) {
-          // Both have all dates, give value2 specific dates
-          const today = new Date();
-          const nextYear = new Date();
-          nextYear.setFullYear(today.getFullYear() + 1);
-          
-          value2.parameters.dateRanges = [{
-            id: crypto.randomUUID(),
-            startDate: nextYear,
-            endDate: new Date(nextYear.getTime() + 30 * 24 * 60 * 60 * 1000) // 30 days after next year
-          }];
-        }
-        // If value2 already has specific dates, we'll keep them as they are
-      } else if (value2.parameters.dateRanges.length === 0) {
-        // value2 applies to all dates, but value1 has specific dates
-        // Make value2 apply to all dates EXCEPT those in value1
-        const complementaryDates: DateRange[] = [];
+    // For each conflict, we'll modify the appropriate values
+    conflicts.forEach(conflict => {
+      const conflictKey = conflict.valueIds.join('-');
+      const prioritizedValueId = resolutions[conflictKey];
+      
+      if (!prioritizedValueId) return;
+      
+      const otherValueId = conflict.valueIds.find(id => id !== prioritizedValueId);
+      if (!otherValueId) return;
+      
+      const prioritizedValueIndex = resolvedValues.findIndex(v => v.id === prioritizedValueId);
+      const otherValueIndex = resolvedValues.findIndex(v => v.id === otherValueId);
+      
+      if (prioritizedValueIndex === -1 || otherValueIndex === -1) return;
+      
+      const otherValue = { ...resolvedValues[otherValueIndex] };
+      
+      // Remove overlapping date ranges
+      if (conflict.conflictingParameters.includes('dateRanges')) {
+        const prioritizedRanges = resolvedValues[prioritizedValueIndex].parameters.dateRanges;
+        const otherRanges = [...otherValue.parameters.dateRanges];
         
-        // For each date range in value1, create ranges before and after
-        value1.parameters.dateRanges.forEach(range1 => {
-          const beforeRange = {
-            id: crypto.randomUUID(),
-            startDate: new Date(0), // Beginning of time
-            endDate: new Date(new Date(range1.startDate).getTime() - 24 * 60 * 60 * 1000) // Day before range1 starts
-          };
-          
-          const afterRange = {
-            id: crypto.randomUUID(),
-            startDate: new Date(new Date(range1.endDate).getTime() + 24 * 60 * 60 * 1000), // Day after range1 ends
-            endDate: new Date(new Date().getFullYear() + 100, 11, 31) // Far in the future
-          };
-          
-          // Only add valid ranges (where start is before end)
-          if (beforeRange.startDate < beforeRange.endDate) {
-            complementaryDates.push(beforeRange);
-          }
-          
-          if (afterRange.startDate < afterRange.endDate) {
-            complementaryDates.push(afterRange);
-          }
+        const newOtherRanges = otherRanges.filter(range1 => {
+          return !prioritizedRanges.some(range2 => 
+            (range1.startDate <= range2.endDate && range1.endDate >= range2.startDate));
         });
         
-        value2.parameters.dateRanges = complementaryDates;
-      } else {
-        // Both have specific date ranges, remove overlapping ones from value2
-        for (let i = value2.parameters.dateRanges.length - 1; i >= 0; i--) {
-          const range2 = value2.parameters.dateRanges[i];
-          let hasOverlap = false;
-          
-          for (const range1 of value1.parameters.dateRanges) {
-            if (new Date(range1.startDate) <= new Date(range2.endDate) && 
-                new Date(range1.endDate) >= new Date(range2.startDate)) {
-              // There's an overlap, remove this range from value2
-              hasOverlap = true;
-              break;
-            }
-          }
-          
-          if (hasOverlap) {
-            value2.parameters.dateRanges.splice(i, 1);
-          }
-        }
+        otherValue.parameters = {
+          ...otherValue.parameters,
+          dateRanges: newOtherRanges
+        };
       }
-    }
-    
-    // Resolve room type conflicts if needed
-    if (conflict?.conflictingParameters.includes("roomTypes")) {
-      // If either value has empty room types (all room types), adjust value2
-      if (value1.parameters.roomTypes.length === 0) {
-        // value1 applies to all room types
-        // If value2 also applies to all room types, give it specific room types
-        if (value2.parameters.roomTypes.length === 0) {
-          // This is a simplification - in a real app, you might want to get actual available room types
-          value2.parameters.roomTypes = [{
-            id: crypto.randomUUID(),
-            name: "Special Suite"
-          }];
-        }
-        // Otherwise, keep value2's specific room types
-      } else if (value2.parameters.roomTypes.length === 0) {
-        // value2 applies to all room types, but value1 has specific room types
-        // Make value2 apply to all room types EXCEPT those in value1
-        value2.parameters.roomTypes = [{
-          id: crypto.randomUUID(),
-          name: "All Other Room Types"
-        }];
-      } else {
-        // Both have specific room types, remove overlapping ones from value2
-        value2.parameters.roomTypes = value2.parameters.roomTypes.filter(rt2 => 
-          !value1.parameters.roomTypes.some(rt1 => rt1.id === rt2.id)
-        );
-      }
-    }
-    
-    // Resolve rate plan conflicts if needed
-    if (conflict?.conflictingParameters.includes("ratePlans")) {
-      // If either value has empty rate plans (all rate plans), adjust value2
-      if (value1.parameters.ratePlans.length === 0) {
-        // value1 applies to all rate plans
-        // If value2 also applies to all rate plans, give it specific rate plans
-        if (value2.parameters.ratePlans.length === 0) {
-          // This is a simplification
-          value2.parameters.ratePlans = [{
-            id: crypto.randomUUID(),
-            name: "Special Offer"
-          }];
-        }
-        // Otherwise, keep value2's specific rate plans
-      } else if (value2.parameters.ratePlans.length === 0) {
-        // value2 applies to all rate plans, but value1 has specific rate plans
-        // Make value2 apply to all rate plans EXCEPT those in value1
-        value2.parameters.ratePlans = [{
-          id: crypto.randomUUID(),
-          name: "All Other Rate Plans"
-        }];
-      } else {
-        // Both have specific rate plans, remove overlapping ones from value2
-        value2.parameters.ratePlans = value2.parameters.ratePlans.filter(rp2 => 
-          !value1.parameters.ratePlans.some(rp1 => rp1.id === rp2.id)
-        );
-      }
-    }
-    
-    // Check for remaining conflicts after this resolution
-    setResolvedValues(updatedValues);
-    
-    // Detect remaining conflicts
-    const newConflicts = detectConflicts(updatedValues);
-    
-    if (newConflicts.length > 0) {
-      // Still have conflicts, move to the next one
-      setRemainingConflicts(newConflicts);
-      setCurrentConflictIndex(0);
       
-      toast({
-        title: "Conflict partially resolved",
-        description: "Removed overlapping parameters. Additional conflicts still need to be resolved.",
-      });
-    } else {
-      // No more conflicts, save the mealplan directly
-      toast({
-        title: "All conflicts resolved",
-        description: "Saving your mealplan with adjusted parameters.",
-      });
+      // Remove overlapping room types
+      if (conflict.conflictingParameters.includes('roomTypes')) {
+        const prioritizedRoomTypes = resolvedValues[prioritizedValueIndex].parameters.roomTypes;
+        const otherRoomTypes = [...otherValue.parameters.roomTypes];
+        
+        const newOtherRoomTypes = otherRoomTypes.filter(type1 => {
+          return !prioritizedRoomTypes.some(type2 => type1.id === type2.id);
+        });
+        
+        otherValue.parameters = {
+          ...otherValue.parameters,
+          roomTypes: newOtherRoomTypes
+        };
+      }
       
-      // Call the onResolve callback with the resolved values
-      onResolve(updatedValues);
-    }
-  };
-
-  // Detect conflicts between values
-  const detectConflicts = (values: SupplementValue[]): Conflict[] => {
-    const conflicts: Conflict[] = [];
-    
-    for (let i = 0; i < values.length; i++) {
-      for (let j = i + 1; j < values.length; j++) {
-        const value1 = values[i];
-        const value2 = values[j];
-        const conflictingParameters: Array<keyof Omit<typeof value1.parameters, 'id' | 'condition' | 'chargeType'>> = [];
+      // Remove overlapping rate plans
+      if (conflict.conflictingParameters.includes('ratePlans')) {
+        const prioritizedRatePlans = resolvedValues[prioritizedValueIndex].parameters.ratePlans;
+        const otherRatePlans = [...otherValue.parameters.ratePlans];
         
-        // Check date range conflicts
-        const hasDateRangeConflict = hasOverlap(
-          value1.parameters.dateRanges, 
-          value2.parameters.dateRanges,
-          (range1, range2) => {
-            const start1 = new Date(range1.startDate);
-            const end1 = new Date(range1.endDate);
-            const start2 = new Date(range2.startDate);
-            const end2 = new Date(range2.endDate);
-            return start1 <= end2 && end1 >= start2;
-          }
-        );
+        const newOtherRatePlans = otherRatePlans.filter(plan1 => {
+          return !prioritizedRatePlans.some(plan2 => plan1.id === plan2.id);
+        });
         
-        if (hasDateRangeConflict) {
-          conflictingParameters.push("dateRanges");
-        }
-        
-        // Check room type conflicts
-        const hasRoomTypeConflict = hasOverlap(
-          value1.parameters.roomTypes,
-          value2.parameters.roomTypes,
-          (rt1, rt2) => rt1.id === rt2.id
-        );
-        
-        if (hasRoomTypeConflict) {
-          conflictingParameters.push("roomTypes");
-        }
-        
-        // Check rate plan conflicts
-        const hasRatePlanConflict = hasOverlap(
-          value1.parameters.ratePlans,
-          value2.parameters.ratePlans,
-          (rp1, rp2) => rp1.id === rp2.id
-        );
-        
-        if (hasRatePlanConflict) {
-          conflictingParameters.push("ratePlans");
-        }
-        
-        // Only add conflict if all parameter types have overlaps
-        if (conflictingParameters.length === 3) {
-          conflicts.push({
-            valueIds: [value1.id, value2.id],
-            conflictingParameters,
-          });
-        }
+        otherValue.parameters = {
+          ...otherValue.parameters,
+          ratePlans: newOtherRatePlans
+        };
       }
-    }
+      
+      resolvedValues[otherValueIndex] = otherValue;
+    });
     
-    return conflicts;
+    onResolve(resolvedValues);
   };
-
-  // Generic function to check for overlaps
-  function hasOverlap<T>(array1: T[], array2: T[], compareFn: (item1: T, item2: T) => boolean): boolean {
-    // If either array is empty, consider it as "all values" which always overlaps
-    if (array1.length === 0 || array2.length === 0) {
-      return true;
-    }
-    
-    // Check for specific overlaps
-    for (const item1 of array1) {
-      for (const item2 of array2) {
-        if (compareFn(item1, item2)) {
-          return true;
-        }
-      }
-    }
-    
-    return false;
-  }
-
-  // Helper function to display charge type
-  const getChargeTypeDisplay = (chargeType: string) => {
-    switch(chargeType) {
-      case "per-room": return "Per Room";
-      case "per-adult-child": return "Per Adult/Child";
-      case "per-occupant": return "Per Occupant";
-      default: return chargeType;
-    }
-  };
-
-  // If there's no conflict or no values to resolve, show loading
-  if (!conflict || conflictingValues.length < 2) {
-    return (
-      <Card className="w-full">
-        <CardHeader>
-          <CardTitle>Processing Conflicts</CardTitle>
-          <CardDescription>
-            Please wait...
-          </CardDescription>
-        </CardHeader>
-      </Card>
-    );
-  }
-
+  
   return (
-    <Card className="w-full">
+    <Card>
       <CardHeader>
-        <CardTitle>Conflicts Detected</CardTitle>
-        <CardDescription>
-          We found conflicting values in your mealplan. These values have overlapping parameters which could cause unexpected behavior.
-        </CardDescription>
+        <CardTitle className="text-lg">Resolve Conflicts</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="space-y-6">
-          <Alert variant="destructive">
-            <AlertTriangle className="h-4 w-4" />
-            <AlertTitle>Conflict {currentConflictIndex + 1} of {remainingConflicts.length}</AlertTitle>
-            <AlertDescription>
-              These values have overlapping dates, room types, and rate plans. Click "Remove Overlap" to automatically adjust the parameters to avoid conflicts.
-            </AlertDescription>
-          </Alert>
-          
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Value</TableHead>
-                <TableHead>Amount</TableHead>
-                <TableHead>Date Ranges</TableHead>
-                <TableHead>Room Types</TableHead>
-                <TableHead>Rate Plans</TableHead>
-                <TableHead>Charge Type</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {conflictingValues.map((value, valueIdx) => (
-                <TableRow key={value.id}>
-                  <TableCell className="font-medium">Value {valueIdx + 1}</TableCell>
-                  <TableCell>
-                    {value.amount} {value.currency}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex flex-col gap-1">
-                      {value.parameters.dateRanges.length > 0 ? (
-                        value.parameters.dateRanges.map((range, i) => (
-                          <Badge key={i} variant="outline" className="inline-block text-xs">
-                            {format(new Date(range.startDate), "MMM d, yyyy")} - {format(new Date(range.endDate), "MMM d, yyyy")}
-                          </Badge>
-                        ))
-                      ) : (
-                        <span className="text-muted-foreground">All dates</span>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    {value.parameters.roomTypes.length === 0 ? (
-                      <span className="text-muted-foreground">All room types</span>
-                    ) : (
-                      <div className="flex flex-wrap gap-1">
-                        {value.parameters.roomTypes.map((type) => (
-                          <Badge key={type.id} variant="outline" className="text-xs">
-                            {type.name}
-                          </Badge>
-                        ))}
-                      </div>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {value.parameters.ratePlans.length === 0 ? (
-                      <span className="text-muted-foreground">All rate plans</span>
-                    ) : (
-                      <div className="flex flex-wrap gap-1">
-                        {value.parameters.ratePlans.map((plan) => (
-                          <Badge key={plan.id} variant="outline" className="text-xs">
-                            {plan.name}
-                          </Badge>
-                        ))}
-                      </div>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {getChargeTypeDisplay(value.parameters.chargeType)}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-          
-          <div className="flex justify-center">
-            <Button 
-              size="lg" 
-              onClick={handleResolveConflict}
-              className="w-full max-w-md"
-            >
-              Remove Overlap
-            </Button>
+        <div className="bg-amber-50 border border-amber-200 rounded-md p-4 mb-6">
+          <div className="flex items-start">
+            <Info className="h-5 w-5 text-amber-500 mt-0.5 mr-2" />
+            <div>
+              <h3 className="font-medium text-amber-800">Conflicts Detected</h3>
+              <p className="text-sm text-amber-700 mt-1">
+                We found conflicts between some of your mealplan values. Please select which value should take precedence in each case.
+              </p>
+            </div>
           </div>
         </div>
+        
+        <div className="space-y-8">
+          {conflicts.map((conflict, index) => {
+            const value1 = getValueById(conflict.valueIds[0]);
+            const value2 = getValueById(conflict.valueIds[1]);
+            if (!value1 || !value2) return null;
+            
+            const conflictKey = conflict.valueIds.join('-');
+            const selectedValueId = resolutions[conflictKey];
+            
+            return (
+              <div key={index} className="border rounded-md p-4">
+                <h3 className="font-medium mb-3">Conflict {index + 1}</h3>
+                
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-10"></TableHead>
+                      <TableHead>Description</TableHead>
+                      <TableHead>Parameters</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    <TableRow>
+                      <TableCell>
+                        <RadioGroup 
+                          value={selectedValueId} 
+                          onValueChange={(value) => handleResolutionChange(conflictKey, value)}
+                        >
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value={value1.id} id={`${value1.id}-option`} />
+                          </div>
+                        </RadioGroup>
+                      </TableCell>
+                      <TableCell>
+                        {value1.parameters.description || "No description"}
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-sm">
+                          <div>Charge Type: {value1.parameters.chargeType}</div>
+                          <div>Date Ranges: {value1.parameters.dateRanges.length || "All"}</div>
+                          <div>Room Types: {value1.parameters.roomTypes.length || "All"}</div>
+                          <div>Rate Plans: {value1.parameters.ratePlans.length || "All"}</div>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell>
+                        <RadioGroup 
+                          value={selectedValueId} 
+                          onValueChange={(value) => handleResolutionChange(conflictKey, value)}
+                        >
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value={value2.id} id={`${value2.id}-option`} />
+                          </div>
+                        </RadioGroup>
+                      </TableCell>
+                      <TableCell>
+                        {value2.parameters.description || "No description"}
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-sm">
+                          <div>Charge Type: {value2.parameters.chargeType}</div>
+                          <div>Date Ranges: {value2.parameters.dateRanges.length || "All"}</div>
+                          <div>Room Types: {value2.parameters.roomTypes.length || "All"}</div>
+                          <div>Rate Plans: {value2.parameters.ratePlans.length || "All"}</div>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+                <div className="text-sm text-muted-foreground mt-2">
+                  <p>
+                    <span className="font-medium">Conflicting parameters:</span>{" "}
+                    {conflict.conflictingParameters.join(", ")}
+                  </p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        
+        <div className="flex justify-end space-x-3 mt-6">
+          <Button variant="outline" onClick={onCancel}>
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleResolve} 
+            disabled={!isAllResolved()}
+            className="bg-green-500 hover:bg-green-600 text-white"
+          >
+            Resolve & Save
+          </Button>
+        </div>
       </CardContent>
-      <CardFooter className="flex justify-end space-x-2">
-        <Button variant="outline" onClick={onCancel}>
-          Cancel
-        </Button>
-      </CardFooter>
     </Card>
   );
 };
