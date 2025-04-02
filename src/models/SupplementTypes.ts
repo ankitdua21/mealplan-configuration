@@ -22,7 +22,7 @@ export interface RatePlan {
   name: string;
 }
 
-export type ChargeType = 'per-room' | 'per-occupant';
+export type ChargeType = 'per-room' | 'per-adult-child' | 'per-occupant';
 
 export interface AgeRange {
   id: string;

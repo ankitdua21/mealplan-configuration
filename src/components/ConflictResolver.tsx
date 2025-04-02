@@ -39,6 +39,19 @@ const ConflictResolver = ({ conflicts, values, onResolve, onCancel }: ConflictRe
     onResolve(resolvedValues);
   };
 
+  const getChargeTypeDisplay = (chargeType: string) => {
+    switch(chargeType) {
+      case "per-room":
+        return "Per Room";
+      case "per-adult-child":
+        return "Per Adult/Child";
+      case "per-occupant":
+        return "Per Occupant";
+      default:
+        return chargeType;
+    }
+  };
+
   return (
     <Card className="w-full">
       <CardHeader>
@@ -110,9 +123,7 @@ const ConflictResolver = ({ conflicts, values, onResolve, onCancel }: ConflictRe
                           )}
                         </TableCell>
                         <TableCell>
-                          {value.parameters.chargeType === "per-room"
-                            ? "Per Room"
-                            : "Per Occupant"}
+                          {getChargeTypeDisplay(value.parameters.chargeType)}
                         </TableCell>
                         <TableCell>
                           <Input

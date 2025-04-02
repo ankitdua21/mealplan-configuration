@@ -9,7 +9,7 @@ import { ParameterSet, RatePlan, RoomType, SupplementValue, ChargeType, AgeRange
 import ParameterBuilder from "./ParameterBuilder";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Trash, Info } from "lucide-react";
+import { Plus, Trash } from "lucide-react";
 
 interface ValueFormProps {
   roomTypes: RoomType[];
@@ -30,12 +30,17 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
   const [extraChildAmount, setExtraChildAmount] = useState("");
   const [extraInfantAmount, setExtraInfantAmount] = useState("");
   
-  // Per-occupant amounts
+  // Per-adult-child amounts
   const [adultAmount, setAdultAmount] = useState("");
   const [childAmount, setChildAmount] = useState("");
   const [infantAmount, setInfantAmount] = useState("");
   const [childAgeRanges, setChildAgeRanges] = useState<AgeRange[]>([]);
-  const [occupancyPricing, setOccupancyPricing] = useState<OccupancyPricing[]>([]);
+  
+  // Per-occupant pricing
+  const [occupancyPricing, setOccupancyPricing] = useState<OccupancyPricing[]>([
+    { id: crypto.randomUUID(), occupantCount: 1, amount: 0 },
+    { id: crypto.randomUUID(), occupantCount: 2, amount: 0 }
+  ]);
 
   // Initialize parameters with all roomTypes and ratePlans selected
   useEffect(() => {
@@ -51,7 +56,8 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
 
   const handleAddValue = () => {
     if (chargeType === "per-room" && !baseAmount) return;
-    if (chargeType === "per-occupant" && !adultAmount) return;
+    if (chargeType === "per-adult-child" && !adultAmount) return;
+    if (chargeType === "per-occupant" && occupancyPricing.length === 0) return;
     if (!parameters) return;
 
     let updatedParameters = { ...parameters, chargeType };
@@ -69,19 +75,36 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
         extraChildAmount: extraChildAmount ? parseFloat(extraChildAmount) : 0,
         extraInfantAmount: extraInfantAmount ? parseFloat(extraInfantAmount) : 0
       };
-    } else {
+    } else if (chargeType === "per-adult-child") {
       updatedParameters.occupantAmounts = {
         adultAmount: parseFloat(adultAmount),
         childAmount: childAmount ? parseFloat(childAmount) : 0,
         infantAmount: infantAmount ? parseFloat(infantAmount) : 0,
         childAgeRanges: [...childAgeRanges],
-        occupancyPricing: [...occupancyPricing]
+        occupancyPricing: []
       };
+    } else { // per-occupant
+      updatedParameters.occupantAmounts = {
+        adultAmount: 0,
+        childAmount: 0,
+        infantAmount: 0,
+        childAgeRanges: [],
+        occupancyPricing: [...occupancyPricing].filter(p => p.amount > 0)
+      };
+    }
+
+    let valueAmount = 0;
+    if (chargeType === "per-room") {
+      valueAmount = parseFloat(baseAmount);
+    } else if (chargeType === "per-adult-child") {
+      valueAmount = parseFloat(adultAmount);
+    } else if (chargeType === "per-occupant" && occupancyPricing.length > 0) {
+      valueAmount = occupancyPricing[0].amount;
     }
 
     const value: SupplementValue = {
       id: crypto.randomUUID(),
-      amount: chargeType === "per-room" ? parseFloat(baseAmount) : parseFloat(adultAmount),
+      amount: valueAmount,
       currency,
       parameters: updatedParameters,
     };
@@ -103,7 +126,10 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
     setChildAmount("");
     setInfantAmount("");
     setChildAgeRanges([]);
-    setOccupancyPricing([]);
+    setOccupancyPricing([
+      { id: crypto.randomUUID(), occupantCount: 1, amount: 0 },
+      { id: crypto.randomUUID(), occupantCount: 2, amount: 0 }
+    ]);
     setParameters({
       id: crypto.randomUUID(),
       dateRanges: [],
@@ -121,7 +147,7 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
   const addChildAgeRange = () => {
     setChildAgeRanges([
       ...childAgeRanges, 
-      { id: crypto.randomUUID(), minAge: 0, maxAge: 17, amount: 0 }
+      { id: crypto.randomUUID(), minAge: 0, maxAge: 0, amount: 0 }
     ]);
   };
 
@@ -136,9 +162,10 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
   };
 
   const addOccupancyPricing = () => {
+    const nextOccupantCount = Math.max(...occupancyPricing.map(p => p.occupantCount)) + 1;
     setOccupancyPricing([
       ...occupancyPricing,
-      { id: crypto.randomUUID(), occupantCount: occupancyPricing.length + 1, amount: 0 }
+      { id: crypto.randomUUID(), occupantCount: nextOccupantCount, amount: 0 }
     ]);
   };
 
@@ -162,11 +189,11 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="description" className="text-sm">
-                Value Description
+                Description
               </Label>
               <Textarea
                 id="description"
-                placeholder="Optional description for this value"
+                placeholder="Optional description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 className="h-20 mt-1"
@@ -202,8 +229,9 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
               onValueChange={(value) => setChargeType(value as ChargeType)}
               className="w-full"
             >
-              <TabsList className="grid grid-cols-2 w-full">
+              <TabsList className="grid grid-cols-3 w-full">
                 <TabsTrigger value="per-room">Per Room</TabsTrigger>
+                <TabsTrigger value="per-adult-child">Per Adult/Child</TabsTrigger>
                 <TabsTrigger value="per-occupant">Per Occupant</TabsTrigger>
               </TabsList>
               
@@ -290,7 +318,7 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
                 </div>
               </TabsContent>
               
-              <TabsContent value="per-occupant" className="mt-4 space-y-6">
+              <TabsContent value="per-adult-child" className="mt-4 space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
                     <Label htmlFor="adultAmount" className="flex items-center">
@@ -367,8 +395,8 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
                               min="0"
                               max="17"
                               placeholder="Min Age"
-                              value={range.minAge}
-                              onChange={(e) => updateChildAgeRange(range.id, 'minAge', parseInt(e.target.value))}
+                              value={range.minAge || ""}
+                              onChange={(e) => updateChildAgeRange(range.id, 'minAge', parseInt(e.target.value) || 0)}
                             />
                           </div>
                           <div>
@@ -379,8 +407,8 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
                               min="0"
                               max="17"
                               placeholder="Max Age"
-                              value={range.maxAge}
-                              onChange={(e) => updateChildAgeRange(range.id, 'maxAge', parseInt(e.target.value))}
+                              value={range.maxAge || ""}
+                              onChange={(e) => updateChildAgeRange(range.id, 'maxAge', parseInt(e.target.value) || 0)}
                             />
                           </div>
                           <div className="flex">
@@ -389,8 +417,8 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
                               min="0"
                               step="0.01"
                               placeholder="Amount"
-                              value={range.amount}
-                              onChange={(e) => updateChildAgeRange(range.id, 'amount', parseFloat(e.target.value))}
+                              value={range.amount || ""}
+                              onChange={(e) => updateChildAgeRange(range.id, 'amount', parseFloat(e.target.value) || 0)}
                               className="rounded-r-none"
                             />
                             <div className="bg-muted px-3 flex items-center rounded-r-md border border-l-0 border-input">
@@ -421,34 +449,30 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
                   <Plus className="mr-2 h-4 w-4" />
                   Add Child Age Range
                 </Button>
-                
-                {occupancyPricing.length > 0 && (
-                  <div className="mt-4 space-y-4">
-                    <div className="flex justify-between items-center">
-                      <Label>Occupancy Based Pricing</Label>
-                    </div>
-                    {occupancyPricing.map((pricing) => (
-                      <div key={pricing.id} className="flex items-center space-x-2">
-                        <div className="flex-1 grid grid-cols-2 gap-2">
-                          <div>
-                            <Label htmlFor={`occupant-count-${pricing.id}`} className="sr-only">Occupant Count</Label>
-                            <Input
-                              id={`occupant-count-${pricing.id}`}
-                              type="number"
-                              min="1"
-                              placeholder="Occupant Count"
-                              value={pricing.occupantCount}
-                              onChange={(e) => updateOccupancyPricing(pricing.id, 'occupantCount', parseInt(e.target.value))}
-                            />
-                          </div>
-                          <div className="flex">
+              </TabsContent>
+              
+              <TabsContent value="per-occupant" className="mt-4 space-y-4">
+                <div className="space-y-4">
+                  <Label className="text-sm font-medium">Occupancy Based Pricing</Label>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Set different prices based on the number of occupants.
+                  </p>
+                  
+                  {occupancyPricing.map((pricing) => (
+                    <div key={pricing.id} className="flex items-center space-x-2">
+                      <div className="flex-1 grid grid-cols-2 gap-2">
+                        <div>
+                          <Label htmlFor={`occupant-count-${pricing.id}`} className="text-sm">
+                            {pricing.occupantCount === 1 ? "1 Occupant" : `${pricing.occupantCount} Occupants`}
+                          </Label>
+                          <div className="flex mt-1">
                             <Input
                               type="number"
                               min="0"
                               step="0.01"
-                              placeholder="Amount"
-                              value={pricing.amount}
-                              onChange={(e) => updateOccupancyPricing(pricing.id, 'amount', parseFloat(e.target.value))}
+                              placeholder="0.00"
+                              value={pricing.amount || ""}
+                              onChange={(e) => updateOccupancyPricing(pricing.id, 'amount', parseFloat(e.target.value) || 0)}
                               className="rounded-r-none"
                             />
                             <div className="bg-muted px-3 flex items-center rounded-r-md border border-l-0 border-input">
@@ -456,39 +480,31 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
                             </div>
                           </div>
                         </div>
+                      </div>
+                      {occupancyPricing.length > 1 && (
                         <Button
                           type="button"
                           variant="ghost"
                           size="icon"
                           onClick={() => removeOccupancyPricing(pricing.id)}
+                          className="mt-6"
                         >
                           <Trash className="h-4 w-4" />
                         </Button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-                
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={addOccupancyPricing}
-                  className="mt-2"
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add Occupancy Pricing
-                </Button>
-                
-                <div className="bg-blue-50 p-4 rounded-md border border-blue-100 mt-4">
-                  <div className="flex">
-                    <Info className="h-5 w-5 text-blue-500 mr-2 flex-shrink-0 mt-0.5" />
-                    <div className="text-sm text-blue-700">
-                      <p className="font-medium">Per Occupant Charges</p>
-                      <p className="mt-1">The Adult Amount is mandatory and will be charged for each adult. Child and Infant amounts are optional.</p>
-                      <p className="mt-1">You can define specific charges for different age ranges of children and for specific numbers of occupants.</p>
+                      )}
                     </div>
-                  </div>
+                  ))}
+                  
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={addOccupancyPricing}
+                    className="mt-2"
+                  >
+                    <Plus className="mr-2 h-4 w-4" />
+                    Add More Occupants
+                  </Button>
                 </div>
               </TabsContent>
             </Tabs>
@@ -508,7 +524,8 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
           <Button 
             onClick={handleAddValue}
             disabled={(chargeType === "per-room" && !baseAmount) || 
-                     (chargeType === "per-occupant" && !adultAmount)}
+                     (chargeType === "per-adult-child" && !adultAmount) ||
+                     (chargeType === "per-occupant" && occupancyPricing.every(p => !p.amount))}
           >
             Add another value
           </Button>
