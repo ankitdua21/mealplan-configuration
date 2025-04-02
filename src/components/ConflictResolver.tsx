@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,6 +19,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { useToast } from "@/hooks/use-toast";
 
 interface ConflictResolverProps {
   conflicts: Conflict[];
@@ -30,12 +30,6 @@ interface ConflictResolverProps {
 
 type OverlapType = 'dates' | 'roomTypes' | 'ratePlans' | 'all';
 
-interface Overlap {
-  type: OverlapType;
-  itemsToRemove: any[];
-  valueIndex: number;
-}
-
 const ConflictResolver = ({ conflicts, values, onResolve, onCancel }: ConflictResolverProps) => {
   const [resolvedValues, setResolvedValues] = useState<SupplementValue[]>([...values]);
   const [currentConflictIndex, setCurrentConflictIndex] = useState<number>(0);
@@ -43,6 +37,7 @@ const ConflictResolver = ({ conflicts, values, onResolve, onCancel }: ConflictRe
   const [showSuccessDialog, setShowSuccessDialog] = useState<boolean>(false);
   const [selectedValueToKeep, setSelectedValueToKeep] = useState<number | null>(null);
   const [remainingConflicts, setRemainingConflicts] = useState<Conflict[]>([...conflicts]);
+  const { toast } = useToast();
 
   // Reset conflict resolution when component mounts or when conflicts change
   useEffect(() => {
@@ -196,80 +191,93 @@ const ConflictResolver = ({ conflicts, values, onResolve, onCancel }: ConflictRe
     
     const updatedValues = [...resolvedValues];
     const targetValueId = conflict.valueIds[valueIndex];
-    const targetValueIndex = resolvedValues.findIndex(v => v.id === targetValueId);
+    const targetValueIndex = updatedValues.findIndex(v => v.id === targetValueId);
     
     if (targetValueIndex === -1) return;
     
-    const value = {...updatedValues[targetValueIndex]};
+    // Create a deep copy of the value to modify
+    const valueCopy = JSON.parse(JSON.stringify(updatedValues[targetValueIndex])) as SupplementValue;
     const overlaps = getCurrentOverlaps();
     
+    // Apply changes based on overlap type
     if (activeOverlapType === 'dates') {
-      // Remove overlapping date ranges
-      const dateRanges = [...value.parameters.dateRanges];
+      // Handle date range overlaps
+      const dateRanges = [...valueCopy.parameters.dateRanges];
+      const dateOverlaps = overlaps as DateRange[];
       
-      // For each overlap, modify or remove affected date ranges
-      for (const overlap of overlaps as DateRange[]) {
-        for (let i = 0; i < dateRanges.length; i++) {
-          const range = dateRanges[i];
-          
-          // If range is completely within overlap, remove it
+      // For each date range in the value, check against all overlaps
+      for (let i = dateRanges.length - 1; i >= 0; i--) {
+        const range = dateRanges[i];
+        let removeRange = false;
+        let newRanges: DateRange[] = [];
+        
+        for (const overlap of dateOverlaps) {
+          // Case 1: Range completely within overlap - remove it
           if (range.startDate >= overlap.startDate && range.endDate <= overlap.endDate) {
-            dateRanges.splice(i, 1);
-            i--;
-          } 
-          // If overlap is at the beginning of the range
+            removeRange = true;
+            break;
+          }
+          // Case 2: Overlap at beginning of range
           else if (range.startDate >= overlap.startDate && range.startDate <= overlap.endDate && range.endDate > overlap.endDate) {
             dateRanges[i] = {
               ...range,
               startDate: new Date(overlap.endDate.getTime() + 86400000) // One day after overlap ends
             };
           }
-          // If overlap is at the end of the range
+          // Case 3: Overlap at end of range
           else if (range.startDate < overlap.startDate && range.endDate >= overlap.startDate && range.endDate <= overlap.endDate) {
             dateRanges[i] = {
               ...range,
               endDate: new Date(overlap.startDate.getTime() - 86400000) // One day before overlap starts
             };
           }
-          // If overlap is in the middle of the range, split into two ranges
+          // Case 4: Overlap in middle of range - split into two
           else if (range.startDate < overlap.startDate && range.endDate > overlap.endDate) {
-            const secondPart = {
+            const beforeRange = {
+              startDate: new Date(range.startDate),
+              endDate: new Date(overlap.startDate.getTime() - 86400000)
+            };
+            
+            const afterRange = {
               startDate: new Date(overlap.endDate.getTime() + 86400000),
               endDate: new Date(range.endDate)
             };
             
-            dateRanges[i] = {
-              ...range,
-              endDate: new Date(overlap.startDate.getTime() - 86400000)
-            };
-            
-            dateRanges.push(secondPart);
+            newRanges.push(beforeRange, afterRange);
+            removeRange = true;
+            break;
           }
+        }
+        
+        if (removeRange) {
+          dateRanges.splice(i, 1);
+          // Add any new ranges from splitting
+          dateRanges.push(...newRanges);
         }
       }
       
-      value.parameters = {
-        ...value.parameters,
-        dateRanges
-      };
-    } else if (activeOverlapType === 'roomTypes') {
+      valueCopy.parameters.dateRanges = dateRanges;
+    } 
+    else if (activeOverlapType === 'roomTypes') {
       // Remove overlapping room types
       const roomTypeIds = new Set((overlaps as RoomType[]).map(rt => rt.id));
-      value.parameters = {
-        ...value.parameters,
-        roomTypes: value.parameters.roomTypes.filter(rt => !roomTypeIds.has(rt.id))
-      };
-    } else if (activeOverlapType === 'ratePlans') {
+      valueCopy.parameters.roomTypes = valueCopy.parameters.roomTypes.filter(rt => !roomTypeIds.has(rt.id));
+    } 
+    else if (activeOverlapType === 'ratePlans') {
       // Remove overlapping rate plans
       const ratePlanIds = new Set((overlaps as RatePlan[]).map(rp => rp.id));
-      value.parameters = {
-        ...value.parameters,
-        ratePlans: value.parameters.ratePlans.filter(rp => !ratePlanIds.has(rp.id))
-      };
+      valueCopy.parameters.ratePlans = valueCopy.parameters.ratePlans.filter(rp => !ratePlanIds.has(rp.id));
     }
     
-    updatedValues[targetValueIndex] = value;
+    // Update the state with the modified value
+    updatedValues[targetValueIndex] = valueCopy;
     setResolvedValues(updatedValues);
+    
+    // Show a toast notification
+    toast({
+      title: "Conflicts removed",
+      description: `Removed overlapping ${activeOverlapType} from Value ${valueIndex + 1}`,
+    });
     
     // Check for remaining conflicts after applying changes
     checkForRemainingConflicts(updatedValues);
@@ -289,6 +297,12 @@ const ConflictResolver = ({ conflicts, values, onResolve, onCancel }: ConflictRe
     );
     
     setResolvedValues(updatedValues);
+    
+    // Show a toast notification
+    toast({
+      title: "Value selected",
+      description: `Keeping Value ${selectedValueToKeep + 1} and removing others with the same criteria`,
+    });
     
     // Check for remaining conflicts after applying changes
     checkForRemainingConflicts(updatedValues);
