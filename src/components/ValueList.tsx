@@ -4,14 +4,22 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { SupplementValue } from "@/models/SupplementTypes";
+import { SupplementValue, RoomType, RatePlan } from "@/models/SupplementTypes";
+import { roomTypes as defaultRoomTypes, ratePlans as defaultRatePlans } from "@/data/dummyData";
 
 interface ValueListProps {
   values: SupplementValue[];
   onRemove: (id: string) => void;
+  roomTypes?: RoomType[];
+  ratePlans?: RatePlan[];
 }
 
-const ValueList = ({ values, onRemove }: ValueListProps) => {
+const ValueList = ({ 
+  values, 
+  onRemove, 
+  roomTypes = defaultRoomTypes, 
+  ratePlans = defaultRatePlans 
+}: ValueListProps) => {
   if (values.length === 0) {
     return null;
   }
@@ -141,7 +149,7 @@ const ValueList = ({ values, onRemove }: ValueListProps) => {
                 </TableCell>
                 <TableCell>
                   {value.parameters.roomTypes.length === 0 || 
-                   (value.parameters.roomTypes.length === roomTypes?.length) ? (
+                   (value.parameters.roomTypes.length === roomTypes.length) ? (
                     <span className="text-muted-foreground">All room types</span>
                   ) : (
                     <div className="flex flex-wrap gap-1">
@@ -155,7 +163,7 @@ const ValueList = ({ values, onRemove }: ValueListProps) => {
                 </TableCell>
                 <TableCell>
                   {value.parameters.ratePlans.length === 0 ||
-                   (value.parameters.ratePlans.length === ratePlans?.length) ? (
+                   (value.parameters.ratePlans.length === ratePlans.length) ? (
                     <span className="text-muted-foreground">All rate plans</span>
                   ) : (
                     <div className="flex flex-wrap gap-1">
