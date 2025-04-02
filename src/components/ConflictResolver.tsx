@@ -348,7 +348,7 @@ const ConflictResolver = ({ conflicts, values, onResolve, onCancel }: ConflictRe
       <CardHeader>
         <CardTitle>Conflicts Detected</CardTitle>
         <CardDescription>
-          We found conflicting values in your mealplan. These values have overlapping parameters which could cause unexpected behavior.
+          {/* Removed the sentence as requested */}
         </CardDescription>
       </CardHeader>
       <CardContent>
