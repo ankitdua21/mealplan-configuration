@@ -5,10 +5,9 @@ import { Conflict, SupplementValue, DateRange, RoomType, RatePlan } from "@/mode
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Check, AlertTriangle } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
-import SavedSupplement from "./SavedSupplement";
 
 interface ConflictResolverProps {
   conflicts: Conflict[];
@@ -21,7 +20,6 @@ const ConflictResolver = ({ conflicts, values, onResolve, onCancel }: ConflictRe
   const [resolvedValues, setResolvedValues] = useState<SupplementValue[]>([...values]);
   const [remainingConflicts, setRemainingConflicts] = useState<Conflict[]>([...conflicts]);
   const [currentConflictIndex, setCurrentConflictIndex] = useState<number>(0);
-  const [resolutionComplete, setResolutionComplete] = useState(false);
   const { toast } = useToast();
 
   // Reset conflict resolution when component mounts or when conflicts change
@@ -29,7 +27,6 @@ const ConflictResolver = ({ conflicts, values, onResolve, onCancel }: ConflictRe
     setResolvedValues([...values]);
     setRemainingConflicts([...conflicts]);
     setCurrentConflictIndex(0);
-    setResolutionComplete(false);
   }, [conflicts, values]);
 
   // Get current conflict and conflicting values
@@ -212,15 +209,6 @@ const ConflictResolver = ({ conflicts, values, onResolve, onCancel }: ConflictRe
       }
     }
     
-    // Check if value2 still has valid parameters after adjustments
-    const hasEmptyParameters = 
-      (value2.parameters.dateRanges.length === 0 && value1.parameters.dateRanges.length === 0) ||
-      (value2.parameters.roomTypes.length === 0 && value1.parameters.roomTypes.length === 0) ||
-      (value2.parameters.ratePlans.length === 0 && value1.parameters.ratePlans.length === 0);
-    
-    // Keep both values, even if value2 has empty parameters in some categories
-    // The empty parameters just mean "all" (all dates, all room types, or all rate plans)
-    
     // Check for remaining conflicts after this resolution
     setResolvedValues(updatedValues);
     
@@ -237,13 +225,14 @@ const ConflictResolver = ({ conflicts, values, onResolve, onCancel }: ConflictRe
         description: "Removed overlapping parameters. Additional conflicts still need to be resolved.",
       });
     } else {
-      // No more conflicts, proceed to show the complete resolution
-      setResolutionComplete(true);
-      
+      // No more conflicts, save the mealplan directly
       toast({
         title: "All conflicts resolved",
-        description: "Overlapping parameters have been adjusted to avoid conflicts.",
+        description: "Saving your mealplan with adjusted parameters.",
       });
+      
+      // Call the onResolve callback with the resolved values
+      onResolve(updatedValues);
     }
   };
 
@@ -338,103 +327,7 @@ const ConflictResolver = ({ conflicts, values, onResolve, onCancel }: ConflictRe
     }
   };
 
-  // If resolution is complete, show all resolved values
-  if (resolutionComplete) {
-    return (
-      <Card className="w-full">
-        <CardHeader>
-          <CardTitle>Conflict Resolution Complete</CardTitle>
-          <CardDescription>
-            All conflicts have been resolved. All your values are preserved, but some parameters have been adjusted to avoid conflicts.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Alert className="bg-green-50 border-green-200 mb-4">
-            <Check className="h-4 w-4 text-green-600" />
-            <AlertDescription className="text-green-700">
-              All conflicts have been resolved by adjusting overlapping parameters!
-            </AlertDescription>
-          </Alert>
-          
-          <div className="space-y-4 mt-4">
-            <h3 className="text-lg font-medium">Your Values</h3>
-            {resolvedValues.map((value, idx) => (
-              <Card key={value.id} className="overflow-hidden">
-                <CardHeader className="bg-muted/50 py-3">
-                  <CardTitle className="text-base">Value {idx + 1}</CardTitle>
-                </CardHeader>
-                <CardContent className="p-4">
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span className="font-medium">Amount:</span>
-                      <span>{value.amount} {value.currency}</span>
-                    </div>
-                    
-                    <div className="flex justify-between">
-                      <span className="font-medium">Charge Type:</span>
-                      <span>{getChargeTypeDisplay(value.parameters.chargeType)}</span>
-                    </div>
-                    
-                    <div>
-                      <span className="font-medium block mb-1">Date Ranges:</span>
-                      <div className="flex flex-wrap gap-1">
-                        {value.parameters.dateRanges.length > 0 ? (
-                          value.parameters.dateRanges.map((range, i) => (
-                            <Badge key={i} variant="outline" className="text-xs">
-                              {format(new Date(range.startDate), "MMM d, yyyy")} - {format(new Date(range.endDate), "MMM d, yyyy")}
-                            </Badge>
-                          ))
-                        ) : (
-                          <span className="text-muted-foreground">All dates</span>
-                        )}
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <span className="font-medium block mb-1">Room Types:</span>
-                      <div className="flex flex-wrap gap-1">
-                        {value.parameters.roomTypes.length === 0 ? (
-                          <span className="text-muted-foreground">All room types</span>
-                        ) : (
-                          value.parameters.roomTypes.map((type) => (
-                            <Badge key={type.id} variant="outline" className="text-xs">
-                              {type.name}
-                            </Badge>
-                          ))
-                        )}
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <span className="font-medium block mb-1">Rate Plans:</span>
-                      <div className="flex flex-wrap gap-1">
-                        {value.parameters.ratePlans.length === 0 ? (
-                          <span className="text-muted-foreground">All rate plans</span>
-                        ) : (
-                          value.parameters.ratePlans.map((plan) => (
-                            <Badge key={plan.id} variant="outline" className="text-xs">
-                              {plan.name}
-                            </Badge>
-                          ))
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </CardContent>
-        <CardFooter className="flex justify-end space-x-2">
-          <Button onClick={() => onResolve(resolvedValues)}>
-            Save Mealplan
-          </Button>
-        </CardFooter>
-      </Card>
-    );
-  }
-
-  // If there's no conflict or no values to resolve, redirect to completion
+  // If there's no conflict or no values to resolve, show loading
   if (!conflict || conflictingValues.length < 2) {
     return (
       <Card className="w-full">
