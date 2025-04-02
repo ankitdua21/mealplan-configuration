@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -111,8 +112,6 @@ const ConflictResolver = ({ conflicts, values, onResolve, onCancel }: ConflictRe
                         <TableCell>
                           {value.parameters.chargeType === "per-room"
                             ? "Per Room"
-                            : value.parameters.chargeType === "per-adult"
-                            ? "Per Adult"
                             : "Per Occupant"}
                         </TableCell>
                         <TableCell>
