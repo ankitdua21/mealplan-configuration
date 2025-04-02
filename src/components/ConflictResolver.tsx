@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,18 +7,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Check, AlertTriangle } from "lucide-react";
 import { format } from "date-fns";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { 
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 
 interface ConflictResolverProps {
@@ -29,15 +16,10 @@ interface ConflictResolverProps {
   onCancel: () => void;
 }
 
-type OverlapType = 'dates' | 'roomTypes' | 'ratePlans' | 'all';
-
 const ConflictResolver = ({ conflicts, values, onResolve, onCancel }: ConflictResolverProps) => {
   const [resolvedValues, setResolvedValues] = useState<SupplementValue[]>([...values]);
-  const [currentConflictIndex, setCurrentConflictIndex] = useState<number>(0);
-  const [activeOverlapType, setActiveOverlapType] = useState<OverlapType | null>(null);
-  const [showSuccessDialog, setShowSuccessDialog] = useState<boolean>(false);
-  const [selectedValueToKeep, setSelectedValueToKeep] = useState<number | null>(null);
   const [remainingConflicts, setRemainingConflicts] = useState<Conflict[]>([...conflicts]);
+  const [currentConflictIndex, setCurrentConflictIndex] = useState<number>(0);
   const { toast } = useToast();
 
   // Reset conflict resolution when component mounts or when conflicts change
@@ -45,413 +27,10 @@ const ConflictResolver = ({ conflicts, values, onResolve, onCancel }: ConflictRe
     setResolvedValues([...values]);
     setRemainingConflicts([...conflicts]);
     setCurrentConflictIndex(0);
-    setActiveOverlapType(null);
-    setShowSuccessDialog(false);
-    setSelectedValueToKeep(null);
-    
-    // Determine initial overlap type to check
-    if (conflicts.length > 0) {
-      const initialType = determineOverlapTypeToResolve();
-      setActiveOverlapType(initialType);
-    }
   }, [conflicts, values]);
 
-  // Function to determine which overlap type to resolve next
-  const determineOverlapTypeToResolve = (): OverlapType | null => {
-    if (remainingConflicts.length === 0) return null;
-    
-    const currentConflict = remainingConflicts[currentConflictIndex];
-    if (!currentConflict) return null;
-    
-    const conflictingValues = currentConflict.valueIds.map(id => 
-      resolvedValues.find(v => v.id === id)
-    ).filter(Boolean) as SupplementValue[];
-    
-    if (conflictingValues.length < 2) return null;
-    
-    // First check for date range overlaps
-    if (hasSpecificDateRanges(conflictingValues)) {
-      return 'dates';
-    }
-    
-    // Next check for specific rate plan selections
-    if (hasSpecificRatePlans(conflictingValues)) {
-      return 'ratePlans';
-    }
-    
-    // Next check for specific room type selections
-    if (hasSpecificRoomTypes(conflictingValues)) {
-      return 'roomTypes';
-    }
-    
-    // If all parameters are using 'all' selections, it's a complete overlap
-    return 'all';
-  };
-
-  // Helper functions to check if there are specific selections
-  const hasSpecificDateRanges = (values: SupplementValue[]): boolean => {
-    return values.some(v => v.parameters.dateRanges.length > 0);
-  };
-
-  const hasSpecificRatePlans = (values: SupplementValue[]): boolean => {
-    return values.some(v => v.parameters.ratePlans.length > 0);
-  };
-
-  const hasSpecificRoomTypes = (values: SupplementValue[]): boolean => {
-    return values.some(v => v.parameters.roomTypes.length > 0);
-  };
-
-  // Function to check for date range overlaps
-  const findDateRangeOverlaps = (value1: SupplementValue, value2: SupplementValue): DateRange[] => {
-    const overlaps: DateRange[] = [];
-    
-    // If either has no date ranges (all dates), we consider no specific overlap to remove
-    if (value1.parameters.dateRanges.length === 0 || value2.parameters.dateRanges.length === 0) {
-      return []; 
-    }
-    
-    for (const range1 of value1.parameters.dateRanges) {
-      for (const range2 of value2.parameters.dateRanges) {
-        if (range1.startDate <= range2.endDate && range1.endDate >= range2.startDate) {
-          // Create a new date range representing the overlap
-          const overlapStart = new Date(Math.max(range1.startDate.getTime(), range2.startDate.getTime()));
-          const overlapEnd = new Date(Math.min(range1.endDate.getTime(), range2.endDate.getTime()));
-          
-          overlaps.push({
-            startDate: overlapStart,
-            endDate: overlapEnd
-          });
-        }
-      }
-    }
-    
-    return overlaps;
-  };
-
-  // Function to find overlapping room types
-  const findRoomTypeOverlaps = (value1: SupplementValue, value2: SupplementValue): RoomType[] => {
-    // If either has no room types selected (all room types), we consider no specific overlap to remove
-    if (value1.parameters.roomTypes.length === 0 || value2.parameters.roomTypes.length === 0) {
-      return []; 
-    }
-    
-    return value1.parameters.roomTypes.filter(rt1 => 
-      value2.parameters.roomTypes.some(rt2 => rt1.id === rt2.id)
-    );
-  };
-
-  // Function to find overlapping rate plans
-  const findRatePlanOverlaps = (value1: SupplementValue, value2: SupplementValue): RatePlan[] => {
-    // If either has no rate plans selected (all rate plans), we consider no specific overlap to remove
-    if (value1.parameters.ratePlans.length === 0 || value2.parameters.ratePlans.length === 0) {
-      return []; 
-    }
-    
-    return value1.parameters.ratePlans.filter(rp1 => 
-      value2.parameters.ratePlans.some(rp2 => rp1.id === rp2.id)
-    );
-  };
-
-  // Function to get current conflict and values
-  const getCurrentConflictData = () => {
-    if (remainingConflicts.length === 0) return { conflict: null, conflictingValues: [] };
-    
-    const conflict = remainingConflicts[currentConflictIndex];
-    if (!conflict) return { conflict: null, conflictingValues: [] };
-    
-    const conflictingValues = conflict.valueIds.map(id => 
-      resolvedValues.find(v => v.id === id)
-    ).filter(Boolean) as SupplementValue[];
-    
-    return { conflict, conflictingValues };
-  };
-
-  // Function to get overlaps based on current overlap type
-  const getCurrentOverlaps = (): DateRange[] | RoomType[] | RatePlan[] => {
-    const { conflictingValues } = getCurrentConflictData();
-    if (conflictingValues.length < 2 || !activeOverlapType) return [];
-    
-    const [value1, value2] = conflictingValues;
-    
-    switch (activeOverlapType) {
-      case 'dates':
-        return findDateRangeOverlaps(value1, value2);
-      case 'ratePlans':
-        return findRatePlanOverlaps(value1, value2) as RatePlan[];
-      case 'roomTypes':
-        return findRoomTypeOverlaps(value1, value2) as RoomType[];
-      default:
-        return [];
-    }
-  };
-
-  // Handle removing overlaps from a specific value
-  const handleRemoveOverlap = (valueIndex: number) => {
-    const { conflict, conflictingValues } = getCurrentConflictData();
-    if (!conflict || conflictingValues.length < 2 || !activeOverlapType) return;
-    
-    // Create a deep copy of the current values
-    const updatedValues = JSON.parse(JSON.stringify(resolvedValues)) as SupplementValue[];
-    const targetValueId = conflict.valueIds[valueIndex];
-    const targetValueIndex = updatedValues.findIndex(v => v.id === targetValueId);
-    
-    if (targetValueIndex === -1) return;
-    
-    // Get the value to modify
-    const valueCopy = updatedValues[targetValueIndex];
-    const overlaps = getCurrentOverlaps();
-    
-    // Apply changes based on overlap type
-    if (activeOverlapType === 'dates') {
-      // Handle date range overlaps
-      const dateRanges = [...valueCopy.parameters.dateRanges];
-      const dateOverlaps = overlaps as DateRange[];
-      
-      // For each date range in the value, check against all overlaps
-      for (let i = dateRanges.length - 1; i >= 0; i--) {
-        const range = dateRanges[i];
-        let removeRange = false;
-        let newRanges: DateRange[] = [];
-        
-        for (const overlap of dateOverlaps) {
-          // Case 1: Range completely within overlap - remove it
-          if (range.startDate >= overlap.startDate && range.endDate <= overlap.endDate) {
-            removeRange = true;
-            break;
-          }
-          // Case 2: Overlap at beginning of range
-          else if (range.startDate >= overlap.startDate && range.startDate <= overlap.endDate && range.endDate > overlap.endDate) {
-            dateRanges[i] = {
-              ...range,
-              startDate: new Date(overlap.endDate.getTime() + 86400000) // One day after overlap ends
-            };
-          }
-          // Case 3: Overlap at end of range
-          else if (range.startDate < overlap.startDate && range.endDate >= overlap.startDate && range.endDate <= overlap.endDate) {
-            dateRanges[i] = {
-              ...range,
-              endDate: new Date(overlap.startDate.getTime() - 86400000) // One day before overlap starts
-            };
-          }
-          // Case 4: Overlap in middle of range - split into two
-          else if (range.startDate < overlap.startDate && range.endDate > overlap.endDate) {
-            const beforeRange = {
-              startDate: new Date(range.startDate),
-              endDate: new Date(overlap.startDate.getTime() - 86400000)
-            };
-            
-            const afterRange = {
-              startDate: new Date(overlap.endDate.getTime() + 86400000),
-              endDate: new Date(range.endDate)
-            };
-            
-            newRanges.push(beforeRange, afterRange);
-            removeRange = true;
-            break;
-          }
-        }
-        
-        if (removeRange) {
-          dateRanges.splice(i, 1);
-          // Add any new ranges from splitting
-          dateRanges.push(...newRanges);
-        }
-      }
-      
-      valueCopy.parameters.dateRanges = dateRanges;
-    } 
-    else if (activeOverlapType === 'roomTypes') {
-      // Remove overlapping room types
-      const roomTypeIds = new Set((overlaps as RoomType[]).map(rt => rt.id));
-      valueCopy.parameters.roomTypes = valueCopy.parameters.roomTypes.filter(rt => !roomTypeIds.has(rt.id));
-    } 
-    else if (activeOverlapType === 'ratePlans') {
-      // Remove overlapping rate plans
-      const ratePlanIds = new Set((overlaps as RatePlan[]).map(rp => rp.id));
-      valueCopy.parameters.ratePlans = valueCopy.parameters.ratePlans.filter(rp => !ratePlanIds.has(rp.id));
-    }
-    
-    // Update state with the modified values
-    setResolvedValues(updatedValues);
-    
-    // Show a toast notification
-    toast({
-      title: "Conflicts removed",
-      description: `Removed overlapping ${activeOverlapType} from Value ${valueIndex + 1}`,
-    });
-    
-    // Check for remaining conflicts after applying changes
-    checkForRemainingConflicts(updatedValues);
-  };
-
-  // Handle selecting a single value to keep (for complete overlaps)
-  const handleSelectValue = () => {
-    if (selectedValueToKeep === null) return;
-    
-    const { conflict } = getCurrentConflictData();
-    if (!conflict) return;
-    
-    // Keep only the selected value
-    const valueIdToKeep = conflict.valueIds[selectedValueToKeep];
-    const updatedValues = resolvedValues.filter(v => 
-      !conflict.valueIds.includes(v.id) || v.id === valueIdToKeep
-    );
-    
-    setResolvedValues(updatedValues);
-    
-    // Show a toast notification
-    toast({
-      title: "Value selected",
-      description: `Keeping Value ${selectedValueToKeep + 1} and removing others with the same criteria`,
-    });
-    
-    // Check for remaining conflicts after applying changes
-    checkForRemainingConflicts(updatedValues);
-  };
-
-  // Check for conflicts after resolving a specific type
-  const checkForRemainingConflicts = (updatedValues: SupplementValue[]) => {
-    // Detect conflicts among updated values
-    const detectedConflicts = detectConflicts(updatedValues);
-    
-    if (detectedConflicts.length === 0) {
-      // If no conflicts remain, show success and allow saving
-      setShowSuccessDialog(true);
-      setRemainingConflicts([]);
-    } else {
-      // Update remaining conflicts and determine next type to resolve
-      setRemainingConflicts(detectedConflicts);
-      setCurrentConflictIndex(0);
-      const nextType = determineOverlapTypeToResolve();
-      setActiveOverlapType(nextType);
-    }
-  };
-
-  // Detect conflicts between values
-  const detectConflicts = (values: SupplementValue[]): Conflict[] => {
-    const conflicts: Conflict[] = [];
-    
-    for (let i = 0; i < values.length; i++) {
-      for (let j = i + 1; j < values.length; j++) {
-        const value1 = values[i];
-        const value2 = values[j];
-        const conflictingParameters: Array<keyof Omit<typeof value1.parameters, 'id' | 'condition' | 'chargeType'>> = [];
-        
-        const dateRanges1 = value1.parameters.dateRanges;
-        const dateRanges2 = value2.parameters.dateRanges;
-        
-        let dateRangeConflict = false;
-        // Check if either has all dates selected
-        const hasAllDates1 = dateRanges1.length === 0;
-        const hasAllDates2 = dateRanges2.length === 0;
-        
-        if (hasAllDates1 || hasAllDates2) {
-          dateRangeConflict = true;
-        } else {
-          // Check for specific date range overlaps
-          for (const range1 of dateRanges1) {
-            for (const range2 of dateRanges2) {
-              if (range1.startDate <= range2.endDate && range1.endDate >= range2.startDate) {
-                dateRangeConflict = true;
-                break;
-              }
-            }
-            if (dateRangeConflict) break;
-          }
-        }
-        
-        if (dateRangeConflict) {
-          conflictingParameters.push("dateRanges");
-        }
-        
-        const roomTypes1 = value1.parameters.roomTypes;
-        const roomTypes2 = value2.parameters.roomTypes;
-        
-        let roomTypeConflict = false;
-        // Check if either has all room types selected
-        const hasAllRoomTypes1 = roomTypes1.length === 0;
-        const hasAllRoomTypes2 = roomTypes2.length === 0;
-        
-        if (hasAllRoomTypes1 || hasAllRoomTypes2) {
-          roomTypeConflict = true;
-        } else {
-          // Check for specific room type overlaps
-          for (const type1 of roomTypes1) {
-            for (const type2 of roomTypes2) {
-              if (type1.id === type2.id) {
-                roomTypeConflict = true;
-                break;
-              }
-            }
-            if (roomTypeConflict) break;
-          }
-        }
-        
-        if (roomTypeConflict) {
-          conflictingParameters.push("roomTypes");
-        }
-        
-        const ratePlans1 = value1.parameters.ratePlans;
-        const ratePlans2 = value2.parameters.ratePlans;
-        
-        let ratePlanConflict = false;
-        // Check if either has all rate plans selected
-        const hasAllRatePlans1 = ratePlans1.length === 0;
-        const hasAllRatePlans2 = ratePlans2.length === 0;
-        
-        if (hasAllRatePlans1 || hasAllRatePlans2) {
-          ratePlanConflict = true;
-        } else {
-          // Check for specific rate plan overlaps
-          for (const plan1 of ratePlans1) {
-            for (const plan2 of ratePlans2) {
-              if (plan1.id === plan2.id) {
-                ratePlanConflict = true;
-                break;
-              }
-            }
-            if (ratePlanConflict) break;
-          }
-        }
-        
-        if (ratePlanConflict) {
-          conflictingParameters.push("ratePlans");
-        }
-        
-        // Only add conflict if all parameter types have overlaps
-        if (conflictingParameters.length === 3) {
-          conflicts.push({
-            valueIds: [value1.id, value2.id],
-            conflictingParameters,
-          });
-        }
-      }
-    }
-    
-    return conflicts;
-  };
-
-  const handleComplete = () => {
-    onResolve(resolvedValues);
-  };
-
-  const getChargeTypeDisplay = (chargeType: string) => {
-    switch(chargeType) {
-      case "per-room":
-        return "Per Room";
-      case "per-adult-child":
-        return "Per Adult/Child";
-      case "per-occupant":
-        return "Per Occupant";
-      default:
-        return chargeType;
-    }
-  };
-
-  const { conflict, conflictingValues } = getCurrentConflictData();
-
   // If there's no conflict or no values to resolve, redirect to completion
-  if (!conflict || conflictingValues.length < 2) {
+  if (remainingConflicts.length === 0) {
     return (
       <Card className="w-full">
         <CardHeader>
@@ -469,7 +48,7 @@ const ConflictResolver = ({ conflicts, values, onResolve, onCancel }: ConflictRe
           </Alert>
         </CardContent>
         <CardFooter className="flex justify-end space-x-2">
-          <Button onClick={handleComplete}>
+          <Button onClick={() => onResolve(resolvedValues)}>
             Save Mealplan
           </Button>
         </CardFooter>
@@ -477,43 +56,230 @@ const ConflictResolver = ({ conflicts, values, onResolve, onCancel }: ConflictRe
     );
   }
 
-  // If there's a success alert but still more conflicts
-  if (showSuccessDialog) {
+  // Get current conflict and conflicting values
+  const getCurrentConflictData = () => {
+    if (remainingConflicts.length === 0) return { conflict: null, conflictingValues: [] };
+    
+    const conflict = remainingConflicts[currentConflictIndex];
+    if (!conflict) return { conflict: null, conflictingValues: [] };
+    
+    const conflictingValues = conflict.valueIds.map(id => 
+      resolvedValues.find(v => v.id === id)
+    ).filter(Boolean) as SupplementValue[];
+    
+    return { conflict, conflictingValues };
+  };
+
+  const { conflict, conflictingValues } = getCurrentConflictData();
+  
+  if (!conflict || conflictingValues.length < 2) {
     return (
-      <AlertDialog open={showSuccessDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Conflict Resolved</AlertDialogTitle>
-            <AlertDialogDescription>
-              The current conflict has been resolved. Would you like to continue resolving remaining conflicts or save the mealplan now?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => {
-              setShowSuccessDialog(false);
-              // If there are no more conflicts, show success screen
-              if (remainingConflicts.length === 0) {
-                handleComplete();
-              }
-            }}>
-              Continue Resolving
-            </AlertDialogCancel>
-            <AlertDialogAction onClick={handleComplete}>
-              Save Mealplan
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <Card className="w-full">
+        <CardHeader>
+          <CardTitle>Processing Conflicts</CardTitle>
+          <CardDescription>
+            Please wait...
+          </CardDescription>
+        </CardHeader>
+      </Card>
     );
   }
 
-  // Return UI for resolving conflicts based on the active overlap type
+  // Function to automatically resolve the current conflict
+  const handleResolveConflict = () => {
+    // Create a deep copy of the values
+    const updatedValues = JSON.parse(JSON.stringify(resolvedValues)) as SupplementValue[];
+    
+    // Get values to adjust
+    const value1Id = conflict.valueIds[0];
+    const value2Id = conflict.valueIds[1];
+    
+    const value1Index = updatedValues.findIndex(v => v.id === value1Id);
+    const value2Index = updatedValues.findIndex(v => v.id === value2Id);
+    
+    if (value1Index === -1 || value2Index === -1) {
+      toast({
+        title: "Error",
+        description: "Could not find the conflicting values",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Keep value1 but modify value2 to avoid overlaps
+    const value1 = updatedValues[value1Index];
+    const value2 = updatedValues[value2Index];
+    
+    // Resolve date range conflicts if needed
+    if (conflict.conflictingParameters.includes("dateRanges")) {
+      // If either value has empty date ranges (all dates), make value2 have no dates
+      if (value1.parameters.dateRanges.length === 0 || value2.parameters.dateRanges.length === 0) {
+        value2.parameters.dateRanges = [];
+      } else {
+        // Remove overlapping date ranges from value2
+        for (let i = value2.parameters.dateRanges.length - 1; i >= 0; i--) {
+          const range2 = value2.parameters.dateRanges[i];
+          
+          for (const range1 of value1.parameters.dateRanges) {
+            if (range1.startDate <= range2.endDate && range1.endDate >= range2.startDate) {
+              // Remove the overlapping range
+              value2.parameters.dateRanges.splice(i, 1);
+              break;
+            }
+          }
+        }
+      }
+    }
+    
+    // Resolve room type conflicts if needed
+    if (conflict.conflictingParameters.includes("roomTypes")) {
+      // If either value has empty room types (all room types), make value2 have no room types
+      if (value1.parameters.roomTypes.length === 0 || value2.parameters.roomTypes.length === 0) {
+        value2.parameters.roomTypes = [];
+      } else {
+        // Remove overlapping room types from value2
+        value2.parameters.roomTypes = value2.parameters.roomTypes.filter(rt2 => 
+          !value1.parameters.roomTypes.some(rt1 => rt1.id === rt2.id)
+        );
+      }
+    }
+    
+    // Resolve rate plan conflicts if needed
+    if (conflict.conflictingParameters.includes("ratePlans")) {
+      // If either value has empty rate plans (all rate plans), make value2 have no rate plans
+      if (value1.parameters.ratePlans.length === 0 || value2.parameters.ratePlans.length === 0) {
+        value2.parameters.ratePlans = [];
+      } else {
+        // Remove overlapping rate plans from value2
+        value2.parameters.ratePlans = value2.parameters.ratePlans.filter(rp2 => 
+          !value1.parameters.ratePlans.some(rp1 => rp1.id === rp2.id)
+        );
+      }
+    }
+    
+    // If value2 now has no dates, no room types, or no rate plans, remove it completely
+    if (
+      (value2.parameters.dateRanges.length === 0 && value1.parameters.dateRanges.length === 0) ||
+      (value2.parameters.roomTypes.length === 0 && value1.parameters.roomTypes.length === 0) ||
+      (value2.parameters.ratePlans.length === 0 && value1.parameters.ratePlans.length === 0)
+    ) {
+      updatedValues.splice(value2Index, 1);
+      toast({
+        title: "Conflict resolved",
+        description: "One value was completely overlapping with another and has been removed.",
+      });
+    } else {
+      toast({
+        title: "Conflict resolved",
+        description: "Overlapping parameters have been removed from one of the values.",
+      });
+    }
+    
+    // Check for remaining conflicts in the updated values
+    const newConflicts = detectConflicts(updatedValues);
+    
+    if (newConflicts.length > 0) {
+      // Move to the next conflict
+      setResolvedValues(updatedValues);
+      setRemainingConflicts(newConflicts);
+      setCurrentConflictIndex(0);
+    } else {
+      // No more conflicts, proceed to save
+      onResolve(updatedValues);
+    }
+  };
+
+  // Detect conflicts between values
+  const detectConflicts = (values: SupplementValue[]): Conflict[] => {
+    const conflicts: Conflict[] = [];
+    
+    for (let i = 0; i < values.length; i++) {
+      for (let j = i + 1; j < values.length; j++) {
+        const value1 = values[i];
+        const value2 = values[j];
+        const conflictingParameters: Array<keyof Omit<typeof value1.parameters, 'id' | 'condition' | 'chargeType'>> = [];
+        
+        // Check date range conflicts
+        const hasDateRangeConflict = hasOverlap(
+          value1.parameters.dateRanges, 
+          value2.parameters.dateRanges,
+          (range1, range2) => range1.startDate <= range2.endDate && range1.endDate >= range2.startDate
+        );
+        
+        if (hasDateRangeConflict) {
+          conflictingParameters.push("dateRanges");
+        }
+        
+        // Check room type conflicts
+        const hasRoomTypeConflict = hasOverlap(
+          value1.parameters.roomTypes,
+          value2.parameters.roomTypes,
+          (rt1, rt2) => rt1.id === rt2.id
+        );
+        
+        if (hasRoomTypeConflict) {
+          conflictingParameters.push("roomTypes");
+        }
+        
+        // Check rate plan conflicts
+        const hasRatePlanConflict = hasOverlap(
+          value1.parameters.ratePlans,
+          value2.parameters.ratePlans,
+          (rp1, rp2) => rp1.id === rp2.id
+        );
+        
+        if (hasRatePlanConflict) {
+          conflictingParameters.push("ratePlans");
+        }
+        
+        // Only add conflict if all parameter types have overlaps
+        if (conflictingParameters.length === 3) {
+          conflicts.push({
+            valueIds: [value1.id, value2.id],
+            conflictingParameters,
+          });
+        }
+      }
+    }
+    
+    return conflicts;
+  };
+
+  // Generic function to check for overlaps
+  function hasOverlap<T>(array1: T[], array2: T[], compareFn: (item1: T, item2: T) => boolean): boolean {
+    // If either array is empty, consider it as "all values" which always overlaps
+    if (array1.length === 0 || array2.length === 0) {
+      return true;
+    }
+    
+    // Check for specific overlaps
+    for (const item1 of array1) {
+      for (const item2 of array2) {
+        if (compareFn(item1, item2)) {
+          return true;
+        }
+      }
+    }
+    
+    return false;
+  }
+
+  // Helper function to display charge type
+  const getChargeTypeDisplay = (chargeType: string) => {
+    switch(chargeType) {
+      case "per-room": return "Per Room";
+      case "per-adult-child": return "Per Adult/Child";
+      case "per-occupant": return "Per Occupant";
+      default: return chargeType;
+    }
+  };
+
   return (
     <Card className="w-full">
       <CardHeader>
         <CardTitle>Conflicts Detected</CardTitle>
         <CardDescription>
-          We found conflicts between your mealplan values. Please resolve them by following the suggestions.
+          We found conflicting values in your mealplan. These values have overlapping parameters which could cause unexpected behavior.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -522,11 +288,7 @@ const ConflictResolver = ({ conflicts, values, onResolve, onCancel }: ConflictRe
             <AlertTriangle className="h-4 w-4" />
             <AlertTitle>Conflict {currentConflictIndex + 1} of {remainingConflicts.length}</AlertTitle>
             <AlertDescription>
-              {activeOverlapType === 'all' ? (
-                "These values have completely overlapping criteria (all dates, room types, and rate plans). You need to choose one to keep."
-              ) : (
-                `These values have overlapping ${activeOverlapType}.`
-              )}
+              These values have overlapping dates, room types, and rate plans. Click "Remove Overlap" to automatically resolve the conflict.
             </AlertDescription>
           </Alert>
           
@@ -595,89 +357,15 @@ const ConflictResolver = ({ conflicts, values, onResolve, onCancel }: ConflictRe
             </TableBody>
           </Table>
           
-          {activeOverlapType === 'all' ? (
-            <div className="bg-gray-50 p-4 rounded-md space-y-2">
-              <h3 className="font-medium">Choose one value to keep:</h3>
-              <RadioGroup 
-                value={selectedValueToKeep !== null ? String(selectedValueToKeep) : undefined}
-                onValueChange={(value) => setSelectedValueToKeep(Number(value))}
-                className="space-y-2"
-              >
-                {conflictingValues.map((value, valueIdx) => (
-                  <div key={value.id} className="flex items-center space-x-2">
-                    <RadioGroupItem value={String(valueIdx)} id={`value-${valueIdx}`} />
-                    <label htmlFor={`value-${valueIdx}`} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                      Value {valueIdx + 1} ({value.amount} {value.currency})
-                    </label>
-                  </div>
-                ))}
-              </RadioGroup>
-              <Button 
-                onClick={handleSelectValue} 
-                disabled={selectedValueToKeep === null}
-                className="mt-4"
-              >
-                Keep Selected Value
-              </Button>
-            </div>
-          ) : (
-            <div className="bg-gray-50 p-4 rounded-md space-y-4">
-              {activeOverlapType === 'dates' && (
-                <>
-                  <h3 className="font-medium">Overlapping date ranges:</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {(getCurrentOverlaps() as DateRange[]).map((dateRange, i) => (
-                      <Badge key={i} variant="outline">
-                        {format(new Date(dateRange.startDate), "MMM d, yyyy")} - {format(new Date(dateRange.endDate), "MMM d, yyyy")}
-                      </Badge>
-                    ))}
-                  </div>
-                </>
-              )}
-              
-              {activeOverlapType === 'roomTypes' && (
-                <>
-                  <h3 className="font-medium">Overlapping room types:</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {(getCurrentOverlaps() as RoomType[]).map((roomType) => (
-                      <Badge key={roomType.id} variant="outline">
-                        {roomType.name}
-                      </Badge>
-                    ))}
-                  </div>
-                </>
-              )}
-              
-              {activeOverlapType === 'ratePlans' && (
-                <>
-                  <h3 className="font-medium">Overlapping rate plans:</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {(getCurrentOverlaps() as RatePlan[]).map((ratePlan) => (
-                      <Badge key={ratePlan.id} variant="outline">
-                        {ratePlan.name}
-                      </Badge>
-                    ))}
-                  </div>
-                </>
-              )}
-              
-              <h3 className="font-medium mt-4">Choose which value to modify:</h3>
-              <div className="flex space-x-2">
-                <Button 
-                  variant="outline" 
-                  onClick={() => handleRemoveOverlap(0)}
-                >
-                  Remove from Value 1
-                </Button>
-                <Button 
-                  variant="outline" 
-                  onClick={() => handleRemoveOverlap(1)}
-                >
-                  Remove from Value 2
-                </Button>
-              </div>
-            </div>
-          )}
+          <div className="flex justify-center">
+            <Button 
+              size="lg" 
+              onClick={handleResolveConflict}
+              className="w-full max-w-md"
+            >
+              Remove Overlap
+            </Button>
+          </div>
         </div>
       </CardContent>
       <CardFooter className="flex justify-end space-x-2">
