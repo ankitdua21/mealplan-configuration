@@ -22,7 +22,35 @@ export interface RatePlan {
   name: string;
 }
 
-export type ChargeType = 'per-room' | 'per-adult' | 'per-occupant';
+export type ChargeType = 'per-room' | 'per-occupant';
+
+export interface AgeRange {
+  id: string;
+  minAge: number;
+  maxAge: number;
+  amount: number;
+}
+
+export interface OccupantAmounts {
+  adultAmount: number;
+  childAmount: number;
+  infantAmount: number;
+  childAgeRanges: AgeRange[];
+  occupancyPricing: OccupancyPricing[];
+}
+
+export interface OccupancyPricing {
+  id: string;
+  occupantCount: number;
+  amount: number;
+}
+
+export interface RoomAmounts {
+  baseAmount: number;
+  extraAdultAmount: number;
+  extraChildAmount: number;
+  extraInfantAmount: number;
+}
 
 export interface ParameterSet {
   id: string;
@@ -30,6 +58,10 @@ export interface ParameterSet {
   roomTypes: RoomType[];
   ratePlans: RatePlan[];
   chargeType: ChargeType;
+  daysOfWeek: string[];
+  description?: string;
+  roomAmounts?: RoomAmounts;
+  occupantAmounts?: OccupantAmounts;
   condition?: LogicalCondition;
 }
 

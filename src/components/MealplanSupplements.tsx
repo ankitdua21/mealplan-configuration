@@ -224,12 +224,12 @@ const MealplanSupplements = () => {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="flex gap-4 mb-6">
+              <div className="flex gap-2 mb-6 flex-nowrap overflow-x-auto pb-2">
                 {supplementTypes.map((type) => (
                   <Button
                     key={type.id}
                     variant={type.type === "mealplan" ? "default" : "outline"}
-                    className="h-20 flex-1"
+                    className="h-16 flex-shrink-0 min-w-[120px]"
                     disabled={type.type !== "mealplan"}
                   >
                     {type.name}
@@ -239,17 +239,17 @@ const MealplanSupplements = () => {
               
               <Separator className="my-6" />
               
-              <div className="space-y-4">
+              <div className="max-w-md mx-auto">
                 <div>
-                  <Label htmlFor="description" className="flex items-center">
+                  <Label htmlFor="description" className="flex items-center text-base font-medium">
                     Mealplan Name <span className="text-red-500 ml-1">*</span>
                   </Label>
                   <Textarea
                     id="description"
-                    placeholder="Describe the mealplan (e.g., 'Continental breakfast served from 7-10 AM')"
+                    placeholder="Enter mealplan name"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    className="mt-1"
+                    className="mt-1 h-16"
                     required
                   />
                 </div>
@@ -297,4 +297,3 @@ const MealplanSupplements = () => {
 };
 
 export default MealplanSupplements;
-

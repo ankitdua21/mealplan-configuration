@@ -6,7 +6,6 @@ import { ChargeType, DateRange, ParameterSet, RatePlan, RoomType } from "@/model
 import DateRangePicker from "./DateRangePicker";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 interface ParameterBuilderProps {
   roomTypes: RoomType[];
@@ -14,6 +13,16 @@ interface ParameterBuilderProps {
   onChange: (parameters: ParameterSet) => void;
   value?: ParameterSet;
 }
+
+const DaysOfWeek = [
+  { id: "monday", label: "Mon" },
+  { id: "tuesday", label: "Tue" },
+  { id: "wednesday", label: "Wed" },
+  { id: "thursday", label: "Thu" },
+  { id: "friday", label: "Fri" },
+  { id: "saturday", label: "Sat" },
+  { id: "sunday", label: "Sun" },
+];
 
 const ParameterBuilder = ({
   roomTypes,
@@ -27,7 +36,8 @@ const ParameterBuilder = ({
       dateRanges: [],
       roomTypes: [...roomTypes], // Pre-select all room types
       ratePlans: [...ratePlans], // Pre-select all rate plans
-      chargeType: "per-room" as ChargeType,
+      chargeType: "per-room",
+      daysOfWeek: ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
     }
   );
 
@@ -39,7 +49,8 @@ const ParameterBuilder = ({
         dateRanges: [],
         roomTypes: [...roomTypes],
         ratePlans: [...ratePlans],
-        chargeType: "per-room" as ChargeType,
+        chargeType: "per-room",
+        daysOfWeek: ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
       };
       setParameters(initialParameters);
       onChange(initialParameters);
@@ -100,6 +111,25 @@ const ParameterBuilder = ({
     updateParameters({ ratePlans: updatedRatePlans });
   };
 
+  const handleDayOfWeekToggle = (day: string) => {
+    const isSelected = parameters.daysOfWeek.includes(day);
+    let updatedDays: string[];
+    
+    if (isSelected) {
+      updatedDays = parameters.daysOfWeek.filter(d => d !== day);
+    } else {
+      updatedDays = [...parameters.daysOfWeek, day];
+    }
+    
+    updateParameters({ daysOfWeek: updatedDays });
+  };
+
+  const toggleAllDays = (select: boolean) => {
+    updateParameters({ 
+      daysOfWeek: select ? DaysOfWeek.map(day => day.id) : [] 
+    });
+  };
+
   return (
     <Card>
       <CardContent className="pt-6 space-y-4">
@@ -155,6 +185,48 @@ const ParameterBuilder = ({
             ranges={parameters.dateRanges} 
             onChange={handleDateRangeChange} 
           />
+        </div>
+
+        <Separator />
+
+        <div className="space-y-2">
+          <div className="flex justify-between items-center">
+            <Label>Days of Week</Label>
+            <div className="space-x-2">
+              <button 
+                type="button"
+                onClick={() => toggleAllDays(true)}
+                className="text-xs text-blue-600 hover:text-blue-800"
+              >
+                Select All
+              </button>
+              <button 
+                type="button"
+                onClick={() => toggleAllDays(false)}
+                className="text-xs text-blue-600 hover:text-blue-800"
+              >
+                Clear All
+              </button>
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2 mt-2">
+            {DaysOfWeek.map((day) => (
+              <div key={day.id} className="flex items-center">
+                <Checkbox 
+                  id={`day-${day.id}`}
+                  checked={parameters.daysOfWeek.includes(day.id)}
+                  onCheckedChange={() => handleDayOfWeekToggle(day.id)}
+                  className="mr-1.5"
+                />
+                <Label
+                  htmlFor={`day-${day.id}`}
+                  className="cursor-pointer text-sm"
+                >
+                  {day.label}
+                </Label>
+              </div>
+            ))}
+          </div>
         </div>
       </CardContent>
     </Card>

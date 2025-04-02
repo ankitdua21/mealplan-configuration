@@ -16,6 +16,56 @@ const ValueList = ({ values, onRemove }: ValueListProps) => {
     return null;
   }
 
+  const formatAmount = (value: SupplementValue) => {
+    if (value.parameters.chargeType === "per-room" && value.parameters.roomAmounts) {
+      return `${value.parameters.roomAmounts.baseAmount} ${value.currency} per room`;
+    } else if (value.parameters.chargeType === "per-occupant" && value.parameters.occupantAmounts) {
+      return `${value.parameters.occupantAmounts.adultAmount} ${value.currency} per adult`;
+    } else {
+      return `${value.amount} ${value.currency}`;
+    }
+  };
+
+  const getChargeTypeDetails = (value: SupplementValue) => {
+    if (value.parameters.chargeType === "per-room") {
+      const roomAmounts = value.parameters.roomAmounts;
+      if (!roomAmounts) return "Per Room";
+      
+      const extras = [];
+      if (roomAmounts.extraAdultAmount > 0) 
+        extras.push(`+${roomAmounts.extraAdultAmount} ${value.currency} per extra adult`);
+      if (roomAmounts.extraChildAmount > 0) 
+        extras.push(`+${roomAmounts.extraChildAmount} ${value.currency} per extra child`);
+      if (roomAmounts.extraInfantAmount > 0) 
+        extras.push(`+${roomAmounts.extraInfantAmount} ${value.currency} per extra infant`);
+      
+      return extras.length > 0 
+        ? `Per Room (${extras.join(", ")})`
+        : "Per Room";
+    } else {
+      const occupantAmounts = value.parameters.occupantAmounts;
+      if (!occupantAmounts) return "Per Occupant";
+      
+      const details = [];
+      details.push(`Adult: ${occupantAmounts.adultAmount} ${value.currency}`);
+      
+      if (occupantAmounts.childAmount > 0) 
+        details.push(`Child: ${occupantAmounts.childAmount} ${value.currency}`);
+      
+      if (occupantAmounts.infantAmount > 0) 
+        details.push(`Infant: ${occupantAmounts.infantAmount} ${value.currency}`);
+      
+      if (occupantAmounts.childAgeRanges && occupantAmounts.childAgeRanges.length > 0) {
+        const ageRanges = occupantAmounts.childAgeRanges.map(range => 
+          `Ages ${range.minAge}-${range.maxAge}: ${range.amount} ${value.currency}`
+        );
+        details.push(`Age Ranges: ${ageRanges.join(", ")}`);
+      }
+      
+      return `Per Occupant (${details.join(", ")})`;
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -26,11 +76,12 @@ const ValueList = ({ values, onRemove }: ValueListProps) => {
           <TableHeader>
             <TableRow>
               <TableHead>Amount</TableHead>
+              <TableHead>Description</TableHead>
               <TableHead>Date Ranges</TableHead>
+              <TableHead>Days</TableHead>
               <TableHead>Room Types</TableHead>
               <TableHead>Rate Plans</TableHead>
               <TableHead>Charge Type</TableHead>
-              <TableHead>Priority</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -38,7 +89,10 @@ const ValueList = ({ values, onRemove }: ValueListProps) => {
             {values.map((value) => (
               <TableRow key={value.id}>
                 <TableCell>
-                  {value.amount} {value.currency}
+                  {formatAmount(value)}
+                </TableCell>
+                <TableCell>
+                  {value.parameters.description || "-"}
                 </TableCell>
                 <TableCell>
                   <div className="flex flex-col gap-1">
@@ -52,6 +106,23 @@ const ValueList = ({ values, onRemove }: ValueListProps) => {
                       <span className="text-muted-foreground">All dates</span>
                     )}
                   </div>
+                </TableCell>
+                <TableCell>
+                  {value.parameters.daysOfWeek && value.parameters.daysOfWeek.length > 0 ? (
+                    value.parameters.daysOfWeek.length === 7 ? (
+                      <span className="text-muted-foreground">All days</span>
+                    ) : (
+                      <div className="flex flex-wrap gap-1">
+                        {value.parameters.daysOfWeek.map((day) => (
+                          <Badge key={day} variant="outline" className="text-xs">
+                            {day.charAt(0).toUpperCase() + day.slice(1, 3)}
+                          </Badge>
+                        ))}
+                      </div>
+                    )
+                  ) : (
+                    <span className="text-muted-foreground">All days</span>
+                  )}
                 </TableCell>
                 <TableCell>
                   <div className="flex flex-wrap gap-1">
@@ -80,16 +151,9 @@ const ValueList = ({ values, onRemove }: ValueListProps) => {
                   </div>
                 </TableCell>
                 <TableCell>
-                  <Badge>
-                    {value.parameters.chargeType === "per-room"
-                      ? "Per Room"
-                      : value.parameters.chargeType === "per-adult"
-                      ? "Per Adult"
-                      : "Per Occupant"}
+                  <Badge className="whitespace-normal text-xs">
+                    {getChargeTypeDetails(value)}
                   </Badge>
-                </TableCell>
-                <TableCell>
-                  {value.priority || "-"}
                 </TableCell>
                 <TableCell className="text-right">
                   <Button
