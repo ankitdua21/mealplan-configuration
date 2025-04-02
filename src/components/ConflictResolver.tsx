@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -46,7 +45,6 @@ const ConflictResolver = ({ conflicts, values, onResolve, onCancel }: ConflictRe
           const overlapEnd = new Date(Math.min(range1.endDate.getTime(), range2.endDate.getTime()));
           
           overlaps.push({
-            id: crypto.randomUUID(),
             startDate: overlapStart,
             endDate: overlapEnd
           });

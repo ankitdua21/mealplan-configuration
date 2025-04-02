@@ -8,6 +8,7 @@ export interface Supplement {
 }
 
 export interface DateRange {
+  id?: string;
   startDate: Date;
   endDate: Date;
 }
