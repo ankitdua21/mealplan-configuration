@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -170,7 +171,7 @@ const ConflictResolver = ({ conflicts, values, onResolve, onCancel }: ConflictRe
   };
 
   // Function to get overlaps based on current overlap type
-  const getCurrentOverlaps = () => {
+  const getCurrentOverlaps = (): DateRange[] | RoomType[] | RatePlan[] => {
     const { conflictingValues } = getCurrentConflictData();
     if (conflictingValues.length < 2 || !activeOverlapType) return [];
     
@@ -233,7 +234,6 @@ const ConflictResolver = ({ conflicts, values, onResolve, onCancel }: ConflictRe
           // If overlap is in the middle of the range, split into two ranges
           else if (range.startDate < overlap.startDate && range.endDate > overlap.endDate) {
             const secondPart = {
-              id: crypto.randomUUID(),
               startDate: new Date(overlap.endDate.getTime() + 86400000),
               endDate: new Date(range.endDate)
             };
@@ -592,7 +592,7 @@ const ConflictResolver = ({ conflicts, values, onResolve, onCancel }: ConflictRe
                 <>
                   <h3 className="font-medium">Overlapping date ranges:</h3>
                   <div className="flex flex-wrap gap-2">
-                    {getCurrentOverlaps().map((dateRange: DateRange, i) => (
+                    {(getCurrentOverlaps() as DateRange[]).map((dateRange, i) => (
                       <Badge key={i} variant="outline">
                         {format(dateRange.startDate, "MMM d, yyyy")} - {format(dateRange.endDate, "MMM d, yyyy")}
                       </Badge>
@@ -605,7 +605,7 @@ const ConflictResolver = ({ conflicts, values, onResolve, onCancel }: ConflictRe
                 <>
                   <h3 className="font-medium">Overlapping room types:</h3>
                   <div className="flex flex-wrap gap-2">
-                    {getCurrentOverlaps().map((roomType: RoomType) => (
+                    {(getCurrentOverlaps() as RoomType[]).map((roomType) => (
                       <Badge key={roomType.id} variant="outline">
                         {roomType.name}
                       </Badge>
@@ -618,7 +618,7 @@ const ConflictResolver = ({ conflicts, values, onResolve, onCancel }: ConflictRe
                 <>
                   <h3 className="font-medium">Overlapping rate plans:</h3>
                   <div className="flex flex-wrap gap-2">
-                    {getCurrentOverlaps().map((ratePlan: RatePlan) => (
+                    {(getCurrentOverlaps() as RatePlan[]).map((ratePlan) => (
                       <Badge key={ratePlan.id} variant="outline">
                         {ratePlan.name}
                       </Badge>
