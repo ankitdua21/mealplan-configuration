@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -29,11 +28,6 @@ const MealplanSupplements = () => {
     setValues((prev) => [...prev, value]);
     setCurrentValue(null);
     setShowAddMorePrompt(true);
-    
-    toast({
-      title: "Value added",
-      description: "You can add more values or save your mealplan.",
-    });
   };
 
   const handleRemoveValue = (id: string) => {
