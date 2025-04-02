@@ -19,11 +19,15 @@ const ValueList = ({ values, onRemove }: ValueListProps) => {
   const formatAmount = (value: SupplementValue) => {
     if (value.parameters.chargeType === "per-room" && value.parameters.roomAmounts) {
       return `${value.parameters.roomAmounts.baseAmount} ${value.currency} per room`;
-    } else if (value.parameters.chargeType === "per-occupant" && value.parameters.occupantAmounts) {
+    } else if (value.parameters.chargeType === "per-adult-child" && value.parameters.occupantAmounts) {
       return `${value.parameters.occupantAmounts.adultAmount} ${value.currency} per adult`;
-    } else {
-      return `${value.amount} ${value.currency}`;
+    } else if (value.parameters.chargeType === "per-occupant" && value.parameters.occupantAmounts) {
+      const firstPricing = value.parameters.occupantAmounts.occupancyPricing[0];
+      if (firstPricing) {
+        return `${firstPricing.amount} ${value.currency} for ${firstPricing.occupantCount} occupant${firstPricing.occupantCount > 1 ? 's' : ''}`;
+      }
     }
+    return `${value.amount} ${value.currency}`;
   };
 
   const getChargeTypeDetails = (value: SupplementValue) => {
@@ -42,9 +46,9 @@ const ValueList = ({ values, onRemove }: ValueListProps) => {
       return extras.length > 0 
         ? `Per Room (${extras.join(", ")})`
         : "Per Room";
-    } else {
+    } else if (value.parameters.chargeType === "per-adult-child") {
       const occupantAmounts = value.parameters.occupantAmounts;
-      if (!occupantAmounts) return "Per Occupant";
+      if (!occupantAmounts) return "Per Adult/Child";
       
       const details = [];
       details.push(`Adult: ${occupantAmounts.adultAmount} ${value.currency}`);
@@ -62,7 +66,18 @@ const ValueList = ({ values, onRemove }: ValueListProps) => {
         details.push(`Age Ranges: ${ageRanges.join(", ")}`);
       }
       
-      return `Per Occupant (${details.join(", ")})`;
+      return `Per Adult/Child (${details.join(", ")})`;
+    } else {
+      const occupantAmounts = value.parameters.occupantAmounts;
+      if (!occupantAmounts || !occupantAmounts.occupancyPricing) return "Per Occupant";
+      
+      const pricing = occupantAmounts.occupancyPricing.map(p => 
+        `${p.occupantCount} occupant${p.occupantCount > 1 ? 's' : ''}: ${p.amount} ${value.currency}`
+      );
+      
+      return pricing.length > 0 
+        ? `Per Occupant (${pricing.join(", ")})`
+        : "Per Occupant";
     }
   };
 
@@ -125,30 +140,32 @@ const ValueList = ({ values, onRemove }: ValueListProps) => {
                   )}
                 </TableCell>
                 <TableCell>
-                  <div className="flex flex-wrap gap-1">
-                    {value.parameters.roomTypes.length > 0 ? (
-                      value.parameters.roomTypes.map((type) => (
+                  {value.parameters.roomTypes.length === 0 || 
+                   (value.parameters.roomTypes.length === roomTypes?.length) ? (
+                    <span className="text-muted-foreground">All room types</span>
+                  ) : (
+                    <div className="flex flex-wrap gap-1">
+                      {value.parameters.roomTypes.map((type) => (
                         <Badge key={type.id} variant="outline" className="text-xs">
                           {type.name}
                         </Badge>
-                      ))
-                    ) : (
-                      <span className="text-muted-foreground">All room types</span>
-                    )}
-                  </div>
+                      ))}
+                    </div>
+                  )}
                 </TableCell>
                 <TableCell>
-                  <div className="flex flex-wrap gap-1">
-                    {value.parameters.ratePlans.length > 0 ? (
-                      value.parameters.ratePlans.map((plan) => (
+                  {value.parameters.ratePlans.length === 0 ||
+                   (value.parameters.ratePlans.length === ratePlans?.length) ? (
+                    <span className="text-muted-foreground">All rate plans</span>
+                  ) : (
+                    <div className="flex flex-wrap gap-1">
+                      {value.parameters.ratePlans.map((plan) => (
                         <Badge key={plan.id} variant="outline" className="text-xs">
                           {plan.name}
                         </Badge>
-                      ))
-                    ) : (
-                      <span className="text-muted-foreground">All rate plans</span>
-                    )}
-                  </div>
+                      ))}
+                    </div>
+                  )}
                 </TableCell>
                 <TableCell>
                   <Badge className="whitespace-normal text-xs">

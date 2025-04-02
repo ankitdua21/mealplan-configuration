@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,9 +20,11 @@ const MealplanSupplements = () => {
   const [savedSupplements, setSavedSupplements] = useState<Supplement[]>([]);
   const [conflicts, setConflicts] = useState<Conflict[]>([]);
   const [showConflictResolver, setShowConflictResolver] = useState(false);
+  const [currentValue, setCurrentValue] = useState<SupplementValue | null>(null);
 
   const handleAddValue = (value: SupplementValue) => {
     setValues((prev) => [...prev, value]);
+    setCurrentValue(null);
   };
 
   const handleRemoveValue = (id: string) => {
@@ -108,8 +109,6 @@ const MealplanSupplements = () => {
           conflictingParameters.push("ratePlans");
         }
         
-        // Removed chargeType conflict check as previously requested
-        
         if (conflictingParameters.length === 3) {
           conflicts.push({
             valueIds: [value1.id, value2.id],
@@ -122,6 +121,10 @@ const MealplanSupplements = () => {
     return conflicts;
   };
 
+  const handleValueSubmit = (value: SupplementValue) => {
+    setCurrentValue(value);
+  };
+
   const handleSave = () => {
     if (!description) {
       toast({
@@ -132,7 +135,12 @@ const MealplanSupplements = () => {
       return;
     }
     
-    if (values.length === 0) {
+    const valuesToSave = [...values];
+    if (currentValue) {
+      valuesToSave.push(currentValue);
+    }
+    
+    if (valuesToSave.length === 0) {
       toast({
         title: "Error",
         description: "Please add at least one value",
@@ -141,15 +149,18 @@ const MealplanSupplements = () => {
       return;
     }
     
-    const detectedConflicts = detectConflicts(values);
+    const detectedConflicts = detectConflicts(valuesToSave);
     
     if (detectedConflicts.length > 0) {
+      if (currentValue) {
+        setValues(valuesToSave);
+      }
       setConflicts(detectedConflicts);
       setShowConflictResolver(true);
       return;
     }
     
-    saveWithoutConflicts(values);
+    saveWithoutConflicts(valuesToSave);
   };
 
   const saveWithoutConflicts = (valuesToSave: SupplementValue[]) => {
@@ -167,9 +178,9 @@ const MealplanSupplements = () => {
       description: "Mealplan supplement has been saved successfully.",
     });
     
-    // Clear form for next supplement
     setDescription("");
     setValues([]);
+    setCurrentValue(null);
     setConflicts([]);
     setShowConflictResolver(false);
   };
@@ -205,7 +216,7 @@ const MealplanSupplements = () => {
       {showConflictResolver ? (
         <ConflictResolver
           conflicts={conflicts}
-          values={values}
+          values={currentValue ? [...values, currentValue] : values}
           onResolve={handleResolveConflicts}
           onCancel={() => setShowConflictResolver(false)}
         />
@@ -239,7 +250,7 @@ const MealplanSupplements = () => {
               
               <Separator className="my-6" />
               
-              <div className="max-w-md mx-auto">
+              <div className="max-w-xl mx-auto">
                 <div>
                   <Label htmlFor="description" className="flex items-center text-base font-medium">
                     Mealplan Name <span className="text-red-500 ml-1">*</span>
@@ -249,7 +260,7 @@ const MealplanSupplements = () => {
                     placeholder="Enter mealplan name"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    className="mt-1 h-16"
+                    className="mt-1"
                     required
                   />
                 </div>

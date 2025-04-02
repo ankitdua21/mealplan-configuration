@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -55,9 +54,6 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
   }, [roomTypes, ratePlans]);
 
   const handleAddValue = () => {
-    if (chargeType === "per-room" && !baseAmount) return;
-    if (chargeType === "per-adult-child" && !adultAmount) return;
-    if (chargeType === "per-occupant" && occupancyPricing.length === 0) return;
     if (!parameters) return;
 
     let updatedParameters = { ...parameters, chargeType };
@@ -452,16 +448,11 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
               </TabsContent>
               
               <TabsContent value="per-occupant" className="mt-4 space-y-4">
-                <div className="space-y-4">
-                  <Label className="text-sm font-medium">Occupancy Based Pricing</Label>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Set different prices based on the number of occupants.
-                  </p>
-                  
-                  {occupancyPricing.map((pricing) => (
-                    <div key={pricing.id} className="flex items-center space-x-2">
-                      <div className="flex-1 grid grid-cols-2 gap-2">
-                        <div>
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-4">
+                    {occupancyPricing.map((pricing) => (
+                      <div key={pricing.id} className="flex items-center space-x-2">
+                        <div className="flex-1">
                           <Label htmlFor={`occupant-count-${pricing.id}`} className="text-sm">
                             {pricing.occupantCount === 1 ? "1 Occupant" : `${pricing.occupantCount} Occupants`}
                           </Label>
@@ -480,20 +471,20 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
                             </div>
                           </div>
                         </div>
+                        {occupancyPricing.length > 1 && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => removeOccupancyPricing(pricing.id)}
+                            className="mt-6"
+                          >
+                            <Trash className="h-4 w-4" />
+                          </Button>
+                        )}
                       </div>
-                      {occupancyPricing.length > 1 && (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => removeOccupancyPricing(pricing.id)}
-                          className="mt-6"
-                        >
-                          <Trash className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                   
                   <Button
                     type="button"
@@ -527,7 +518,7 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
                      (chargeType === "per-adult-child" && !adultAmount) ||
                      (chargeType === "per-occupant" && occupancyPricing.every(p => !p.amount))}
           >
-            Add another value
+            Add Value
           </Button>
         </div>
       </CardContent>
