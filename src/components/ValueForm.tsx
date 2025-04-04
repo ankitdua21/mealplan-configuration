@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,7 +22,6 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
   const [chargeType, setChargeType] = useState<ChargeType>("per-room");
   const [description, setDescription] = useState("");
   const [parameters, setParameters] = useState<ParameterSet | null>(null);
-  const [leadTime, setLeadTime] = useState<number>(0);
   
   // Per-room amounts
   const [baseAmount, setBaseAmount] = useState("");
@@ -61,8 +59,7 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
 
     let updatedParameters = { 
       ...parameters, 
-      chargeType,
-      leadTime: leadTime || 0
+      chargeType
     };
     
     // Add description if provided
@@ -129,7 +126,6 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
     setChildAmount("");
     setInfantAmount("");
     setChildAgeRanges([]);
-    setLeadTime(0);
     setOccupancyPricing([
       { id: crypto.randomUUID(), occupantCount: 1, amount: 0 },
       { id: crypto.randomUUID(), occupantCount: 2, amount: 0 }
@@ -147,21 +143,6 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
 
   const handleParametersChange = (newParameters: ParameterSet) => {
     setParameters(newParameters);
-    // If the newParameters has a leadTime value, update the leadTime state
-    if (newParameters.leadTime !== undefined) {
-      setLeadTime(newParameters.leadTime);
-    }
-  };
-
-  const handleLeadTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = parseInt(e.target.value) || 0;
-    setLeadTime(value);
-    if (parameters) {
-      setParameters({
-        ...parameters,
-        leadTime: value
-      });
-    }
   };
 
   const addChildAgeRange = () => {
@@ -534,21 +515,6 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
             onChange={handleParametersChange}
             value={parameters || undefined}
           />
-          
-          <div className="mt-4">
-            <Label htmlFor="leadTime" className="text-sm">
-              Lead Time (days)
-            </Label>
-            <Input
-              id="leadTime"
-              type="number"
-              min="0"
-              placeholder="Enter minimum lead time in days"
-              value={leadTime || ''}
-              onChange={handleLeadTimeChange}
-              className="mt-1"
-            />
-          </div>
         </div>
 
         <div className="flex justify-start">

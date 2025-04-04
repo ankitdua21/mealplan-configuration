@@ -291,8 +291,8 @@ const MealplanSupplements = () => {
               <Separator className="my-6" />
               
               <div className="mx-auto">
-                <div className="flex flex-col md:flex-row gap-4 mb-4 items-end">
-                  <div className="flex-1">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                  <div>
                     <Label htmlFor="description" className="flex items-center text-base font-medium">
                       Mealplan Name <span className="text-red-500 ml-1">*</span>
                     </Label>
@@ -305,7 +305,7 @@ const MealplanSupplements = () => {
                       required
                     />
                   </div>
-                  <div className="flex-1">
+                  <div>
                     <Label htmlFor="code" className="flex items-center text-base font-medium">
                       Code <span className="text-red-500 ml-1">*</span>
                     </Label>
@@ -318,7 +318,7 @@ const MealplanSupplements = () => {
                       required
                     />
                   </div>
-                  <div className="flex-1">
+                  <div>
                     <Label className="flex items-center text-base font-medium">
                       Meal Included <span className="text-red-500 ml-1">*</span>
                     </Label>

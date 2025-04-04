@@ -143,82 +143,83 @@ const ParameterBuilder = ({ roomTypes, ratePlans, onChange, value }: ParameterBu
         </div>
       </div>
       
-      <div className="flex flex-col md:flex-row gap-6">
-        <div className="flex-1">
-          <div className="flex justify-between items-center mb-2">
-            <Label className="text-sm flex items-center gap-1">
-              <Calendar size={16} /> Date Ranges
-            </Label>
-            <Button type="button" variant="outline" size="sm" onClick={addDateRange} className="h-7 px-2">
-              <Plus size={16} className="mr-1" /> Add
-            </Button>
-          </div>
-          
-          {parameters.dateRanges.length === 0 ? (
-            <div className="text-sm text-muted-foreground italic">No date restrictions (applies to all dates)</div>
-          ) : (
-            <div className="space-y-2">
-              {parameters.dateRanges.map((range) => (
-                <div key={range.id} className="flex gap-2 items-center">
-                  <DateRangePicker
-                    startDate={range.startDate}
-                    endDate={range.endDate}
-                    onStartDateChange={(date) => updateDateRange(range.id as string, 'startDate', date)}
-                    onEndDateChange={(date) => updateDateRange(range.id as string, 'endDate', date)}
-                    className="flex-1"
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => removeDateRange(range.id as string)}
-                    className="h-8 w-8"
-                  >
-                    <Trash size={16} />
-                  </Button>
-                </div>
-              ))}
-            </div>
-          )}
+      <div>
+        <div className="flex justify-between items-center mb-2">
+          <Label className="text-sm flex items-center gap-1">
+            <Calendar size={16} /> Date Ranges
+          </Label>
+          <Button type="button" variant="outline" size="sm" onClick={addDateRange} className="h-7 px-2">
+            <Plus size={16} className="mr-1" /> Add
+          </Button>
         </div>
         
-        <div className="flex-1">
-          <Label className="text-sm flex items-center gap-1 mb-2">
-            <Clock3 size={16} /> Days of Week
-          </Label>
-          <div className="flex flex-wrap gap-2">
-            {days.map((day) => (
-              <div key={day.value} className="flex items-center space-x-2">
-                <Checkbox
-                  id={`day-${day.value}`}
-                  checked={parameters.daysOfWeek?.includes(day.value)}
-                  onCheckedChange={() => toggleDayOfWeek(day.value)}
+        {parameters.dateRanges.length === 0 ? (
+          <div className="text-sm text-muted-foreground italic">No date restrictions (applies to all dates)</div>
+        ) : (
+          <div className="space-y-2">
+            {parameters.dateRanges.map((range) => (
+              <div key={range.id} className="flex gap-2 items-center">
+                <DateRangePicker
+                  startDate={range.startDate}
+                  endDate={range.endDate}
+                  onStartDateChange={(date) => updateDateRange(range.id as string, 'startDate', date)}
+                  onEndDateChange={(date) => updateDateRange(range.id as string, 'endDate', date)}
+                  className="flex-1"
                 />
-                <Label
-                  htmlFor={`day-${day.value}`}
-                  className="text-sm font-normal cursor-pointer"
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => removeDateRange(range.id as string)}
+                  className="h-8 w-8"
                 >
-                  {day.label.substring(0, 3)}
-                </Label>
+                  <Trash size={16} />
+                </Button>
               </div>
             ))}
           </div>
+        )}
+      </div>
+      
+      <div>
+        <Label className="text-sm flex items-center gap-1 mb-2">
+          <Clock3 size={16} /> Days of Week
+        </Label>
+        <div className="flex flex-wrap gap-2">
+          {days.map((day) => (
+            <div key={day.value} className="flex items-center space-x-2">
+              <Checkbox
+                id={`day-${day.value}`}
+                checked={parameters.daysOfWeek?.includes(day.value)}
+                onCheckedChange={() => toggleDayOfWeek(day.value)}
+              />
+              <Label
+                htmlFor={`day-${day.value}`}
+                className="text-sm font-normal cursor-pointer"
+              >
+                {day.label.substring(0, 3)}
+              </Label>
+            </div>
+          ))}
         </div>
       </div>
       
-      <div className="pt-2">
-        <Label htmlFor="leadTime" className="text-sm flex items-center gap-1 mb-1">
-          <Clock3 size={16} /> Lead Time (days)
-        </Label>
-        <Input
-          id="leadTime"
-          type="number"
-          min="0"
-          placeholder="Enter minimum lead time in days"
-          value={parameters.leadTime || ''}
-          onChange={handleLeadTimeChange}
-          className="max-w-xs"
-        />
+      <div>
+        <div className="flex items-center gap-2">
+          <Label htmlFor="leadTime" className="text-sm flex items-center gap-1">
+            <Clock3 size={16} /> Lead Time (days)
+          </Label>
+          <Input
+            id="leadTime"
+            type="number"
+            min="0"
+            max="500"
+            placeholder="0"
+            value={parameters.leadTime || ''}
+            onChange={handleLeadTimeChange}
+            className="max-w-[100px]"
+          />
+        </div>
       </div>
     </div>
   );
