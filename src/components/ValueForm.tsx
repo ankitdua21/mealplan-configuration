@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -49,18 +50,14 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
       roomTypes: [...roomTypes],
       ratePlans: [...ratePlans],
       chargeType: "per-room",
-      daysOfWeek: ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"],
-      leadTime: 0
+      daysOfWeek: ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
     });
   }, [roomTypes, ratePlans]);
 
   const handleAddValue = () => {
     if (!parameters) return;
 
-    let updatedParameters = { 
-      ...parameters, 
-      chargeType
-    };
+    let updatedParameters = { ...parameters, chargeType };
     
     // Add description if provided
     if (description.trim()) {
@@ -136,8 +133,7 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
       roomTypes: [...roomTypes],
       ratePlans: [...ratePlans],
       chargeType: "per-room",
-      daysOfWeek: ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"],
-      leadTime: 0
+      daysOfWeek: ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
     });
   };
 
@@ -534,3 +530,4 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
 };
 
 export default ValueForm;
+
