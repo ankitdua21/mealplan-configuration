@@ -33,7 +33,7 @@ const SavedSupplement = ({ supplement }: SavedSupplementProps) => {
             </Badge>
             {mealsIncluded.length > 0 && (
               <Badge variant="secondary" className="text-xs font-normal">
-                Meals: {mealsIncluded.join(", ")}
+                Meals Included: {mealsIncluded.join(", ")}
               </Badge>
             )}
           </div>

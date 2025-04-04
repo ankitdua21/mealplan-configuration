@@ -91,7 +91,7 @@ const MealplanHeader = ({
             </div>
             <div className="flex-1">
               <Label className="flex items-center text-base font-medium">
-                Meal Included <span className="text-red-500 ml-1">*</span>
+                Meals Included <span className="text-red-500 ml-1">*</span>
               </Label>
               <div className="flex flex-wrap gap-4 mt-1">
                 <div className="flex items-center space-x-2">
