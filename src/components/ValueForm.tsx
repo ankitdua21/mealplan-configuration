@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -519,8 +518,9 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
             value={parameters || undefined}
           />
           
-          {/* Add Lead Time field below Days of Week */}
-          <div className="space-y-2">
+          {/* Booking Window Configuration Section */}
+          <div className="space-y-2 border rounded-md p-4">
+            <h3 className="text-base font-semibold mb-2">Booking Window Configuration</h3>
             <div className="flex items-center space-x-2">
               <Label htmlFor="leadTime" className="text-sm font-medium">
                 Lead Time
