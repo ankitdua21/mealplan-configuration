@@ -1,20 +1,15 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Info, Check, Plus, Coffee, UtensilsCrossed, Soup } from "lucide-react";
 import { Conflict, Supplement, SupplementValue } from "@/models/SupplementTypes";
 import { roomTypes, ratePlans, supplementTypes } from "@/data/dummyData";
 import ValueForm from "./ValueForm";
 import ValueList from "./ValueList";
 import ConflictResolver from "./ConflictResolver";
-import SavedSupplement from "./SavedSupplement";
 import { useToast } from "@/hooks/use-toast";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
+import MealplanHeader from "./mealplan/MealplanHeader";
+import SavedSupplementsList from "./mealplan/SavedSupplementsList";
+import EmptyMealplanState from "./mealplan/EmptyMealplanState";
+import SuccessAlert from "./mealplan/SuccessAlert";
 
 const MealplanSupplements = () => {
   const { toast } = useToast();
@@ -228,29 +223,18 @@ const MealplanSupplements = () => {
     saveWithoutConflicts(resolvedValues);
   };
 
+  const scrollToValueForm = () => {
+    document.getElementById('valueForm')?.scrollIntoView({ behavior: 'smooth' });
+  };
+
   return (
     <div className="container mx-auto py-8 px-4 max-w-6xl">
       <h1 className="text-2xl font-bold mb-6">Hotel Supplements Configuration</h1>
       
-      {savedSupplements.length > 0 && (
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold">Your Saved Mealplans</h2>
-            <Button 
-              variant="outline" 
-              onClick={() => setSavedSupplements([])}
-              className="text-sm"
-            >
-              Clear All
-            </Button>
-          </div>
-          <div className="space-y-4">
-            {savedSupplements.map(supplement => (
-              <SavedSupplement key={supplement.id} supplement={supplement} />
-            ))}
-          </div>
-        </div>
-      )}
+      <SavedSupplementsList 
+        supplements={savedSupplements} 
+        onClearAll={() => setSavedSupplements([])} 
+      />
       
       {showConflictResolver ? (
         <ConflictResolver
@@ -261,109 +245,15 @@ const MealplanSupplements = () => {
         />
       ) : (
         <div className="space-y-8">
-          <Card>
-            <CardHeader>
-              <div className="flex justify-between items-center">
-                <CardTitle>Configure New Supplement</CardTitle>
-                {savedSupplements.length > 0 && (
-                  <div className="text-sm text-muted-foreground flex items-center">
-                    <Info size={16} className="mr-1" />
-                    You can create multiple mealplan supplements
-                  </div>
-                )}
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="flex gap-2 mb-6 flex-nowrap overflow-x-auto pb-2">
-                {supplementTypes.map((type) => (
-                  <Button
-                    key={type.id}
-                    variant={type.type === "mealplan" ? "default" : "outline"}
-                    className="h-16 flex-shrink-0 min-w-[120px]"
-                    disabled={type.type !== "mealplan"}
-                  >
-                    {type.name}
-                  </Button>
-                ))}
-              </div>
-              
-              <Separator className="my-6" />
-              
-              <div className="mx-auto">
-                <div className="flex flex-col md:flex-row gap-4 mb-4 items-end">
-                  <div className="flex-1">
-                    <Label htmlFor="description" className="flex items-center text-base font-medium">
-                      Mealplan Name <span className="text-red-500 ml-1">*</span>
-                    </Label>
-                    <Textarea
-                      id="description"
-                      placeholder="Enter mealplan name"
-                      value={description}
-                      onChange={(e) => setDescription(e.target.value)}
-                      className="mt-1"
-                      required
-                    />
-                  </div>
-                  <div className="flex-1">
-                    <Label htmlFor="code" className="flex items-center text-base font-medium">
-                      Code <span className="text-red-500 ml-1">*</span>
-                    </Label>
-                    <Input
-                      id="code"
-                      placeholder="Enter mealplan code"
-                      value={code}
-                      onChange={(e) => setCode(e.target.value)}
-                      className="mt-1"
-                      required
-                    />
-                  </div>
-                  <div className="flex-1">
-                    <Label className="flex items-center text-base font-medium">
-                      Meal Included <span className="text-red-500 ml-1">*</span>
-                    </Label>
-                    <div className="flex flex-wrap gap-4 mt-1">
-                      <div className="flex items-center space-x-2">
-                        <Checkbox 
-                          id="breakfast" 
-                          checked={mealIncluded.breakfast}
-                          onCheckedChange={(checked) => 
-                            setMealIncluded(prev => ({...prev, breakfast: checked === true}))
-                          }
-                        />
-                        <Label htmlFor="breakfast" className="font-normal flex items-center gap-1">
-                          <Coffee size={16} /> Breakfast
-                        </Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Checkbox 
-                          id="lunch" 
-                          checked={mealIncluded.lunch}
-                          onCheckedChange={(checked) => 
-                            setMealIncluded(prev => ({...prev, lunch: checked === true}))
-                          }
-                        />
-                        <Label htmlFor="lunch" className="font-normal flex items-center gap-1">
-                          <UtensilsCrossed size={16} /> Lunch
-                        </Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Checkbox 
-                          id="dinner" 
-                          checked={mealIncluded.dinner}
-                          onCheckedChange={(checked) => 
-                            setMealIncluded(prev => ({...prev, dinner: checked === true}))
-                          }
-                        />
-                        <Label htmlFor="dinner" className="font-normal flex items-center gap-1">
-                          <Soup size={16} /> Dinner
-                        </Label>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <MealplanHeader
+            description={description}
+            setDescription={setDescription}
+            code={code}
+            setCode={setCode}
+            mealIncluded={mealIncluded}
+            setMealIncluded={setMealIncluded}
+            hasSavedSupplements={savedSupplements.length > 0}
+          />
           
           <ValueForm
             roomTypes={roomTypes}
@@ -376,22 +266,7 @@ const MealplanSupplements = () => {
               <ValueList values={values} onRemove={handleRemoveValue} />
               
               {showAddMorePrompt && (
-                <Alert className="bg-green-50 border-green-200">
-                  <Check className="h-4 w-4 text-green-600" />
-                  <AlertDescription className="text-green-700 flex justify-between items-center">
-                    <span>Value added successfully! You can add more values or save your mealplan.</span>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="ml-4 border-green-300 text-green-700"
-                      onClick={() => {
-                        document.getElementById('valueForm')?.scrollIntoView({ behavior: 'smooth' });
-                      }}
-                    >
-                      <Plus className="h-4 w-4 mr-1" /> Add Another Value
-                    </Button>
-                  </AlertDescription>
-                </Alert>
+                <SuccessAlert onAddAnother={scrollToValueForm} />
               )}
             </>
           )}
@@ -412,18 +287,7 @@ const MealplanSupplements = () => {
             </Button>
           </div>
           
-          {savedSupplements.length === 0 && (
-            <div className="border border-dashed border-gray-300 rounded-lg p-6 mt-6">
-              <div className="flex items-center justify-center flex-col text-center">
-                <Info size={24} className="text-gray-400 mb-2" />
-                <h3 className="text-lg font-medium mb-1">Create Multiple Mealplans</h3>
-                <p className="text-muted-foreground max-w-md">
-                  You can create multiple different mealplan supplements. After saving each mealplan, 
-                  the form will reset so you can configure another one.
-                </p>
-              </div>
-            </div>
-          )}
+          {savedSupplements.length === 0 && <EmptyMealplanState />}
         </div>
       )}
     </div>
