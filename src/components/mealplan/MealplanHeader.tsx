@@ -1,8 +1,8 @@
+
 import { Info } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Coffee, UtensilsCrossed, Soup } from "lucide-react";
@@ -62,12 +62,12 @@ const MealplanHeader = ({
         <Separator className="my-6" />
         
         <div className="mx-auto">
-          <div className="flex flex-col md:flex-row gap-4 mb-4 items-end">
+          <div className="flex flex-col md:flex-row gap-4 mb-4 items-start">
             <div className="flex-1">
               <Label htmlFor="description" className="flex items-center text-base font-medium">
                 Mealplan Name <span className="text-red-500 ml-1">*</span>
               </Label>
-              <Textarea
+              <Input
                 id="description"
                 placeholder="Enter mealplan name"
                 value={description}

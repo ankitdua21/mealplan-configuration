@@ -23,6 +23,7 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
   const [chargeType, setChargeType] = useState<ChargeType>("per-room");
   const [description, setDescription] = useState("");
   const [parameters, setParameters] = useState<ParameterSet | null>(null);
+  const [leadTime, setLeadTime] = useState<number | undefined>(undefined);
   
   // Per-room amounts
   const [baseAmount, setBaseAmount] = useState("");
@@ -62,6 +63,11 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
     // Add description if provided
     if (description.trim()) {
       updatedParameters.description = description;
+    }
+    
+    // Add lead time if provided
+    if (leadTime !== undefined) {
+      updatedParameters.leadTime = leadTime;
     }
     
     // Add charge type specific amounts
@@ -115,6 +121,7 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
     setDescription("");
     setCurrency("USD");
     setChargeType("per-room");
+    setLeadTime(undefined);
     setBaseAmount("");
     setExtraAdultAmount("");
     setExtraChildAmount("");
@@ -511,6 +518,25 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
             onChange={handleParametersChange}
             value={parameters || undefined}
           />
+          
+          {/* Add Lead Time field below Days of Week */}
+          <div className="space-y-2">
+            <div className="flex items-center space-x-2">
+              <Label htmlFor="leadTime" className="text-sm font-medium">
+                Lead Time
+              </Label>
+              <Input
+                id="leadTime"
+                type="number"
+                min="0"
+                max="500"
+                placeholder="0"
+                value={leadTime === undefined ? "" : leadTime}
+                onChange={(e) => setLeadTime(e.target.value ? parseInt(e.target.value) : undefined)}
+                className="w-24 h-8"
+              />
+            </div>
+          </div>
         </div>
 
         <div className="flex justify-start">
@@ -530,4 +556,3 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
 };
 
 export default ValueForm;
-
