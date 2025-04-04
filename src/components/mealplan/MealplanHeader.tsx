@@ -98,9 +98,13 @@ const MealplanHeader = ({
                   <Checkbox 
                     id="breakfast" 
                     checked={mealIncluded.breakfast}
-                    onCheckedChange={(checked) => 
-                      setMealIncluded(prev => ({...prev, breakfast: checked === true}))
-                    }
+                    onCheckedChange={(checked) => {
+                      const newMealIncluded = {
+                        ...mealIncluded,
+                        breakfast: checked === true
+                      };
+                      setMealIncluded(newMealIncluded);
+                    }}
                   />
                   <Label htmlFor="breakfast" className="font-normal flex items-center gap-1">
                     <Coffee size={16} /> Breakfast
@@ -110,9 +114,13 @@ const MealplanHeader = ({
                   <Checkbox 
                     id="lunch" 
                     checked={mealIncluded.lunch}
-                    onCheckedChange={(checked) => 
-                      setMealIncluded(prev => ({...prev, lunch: checked === true}))
-                    }
+                    onCheckedChange={(checked) => {
+                      const newMealIncluded = {
+                        ...mealIncluded,
+                        lunch: checked === true
+                      };
+                      setMealIncluded(newMealIncluded);
+                    }}
                   />
                   <Label htmlFor="lunch" className="font-normal flex items-center gap-1">
                     <UtensilsCrossed size={16} /> Lunch
@@ -122,9 +130,13 @@ const MealplanHeader = ({
                   <Checkbox 
                     id="dinner" 
                     checked={mealIncluded.dinner}
-                    onCheckedChange={(checked) => 
-                      setMealIncluded(prev => ({...prev, dinner: checked === true}))
-                    }
+                    onCheckedChange={(checked) => {
+                      const newMealIncluded = {
+                        ...mealIncluded,
+                        dinner: checked === true
+                      };
+                      setMealIncluded(newMealIncluded);
+                    }}
                   />
                   <Label htmlFor="dinner" className="font-normal flex items-center gap-1">
                     <Soup size={16} /> Dinner
