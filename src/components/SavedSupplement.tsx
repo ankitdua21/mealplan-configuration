@@ -3,16 +3,41 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Separator } from "@/components/ui/separator";
 import { Supplement } from "@/models/SupplementTypes";
 import ValueList from "./ValueList";
+import { Badge } from "@/components/ui/badge";
 
 interface SavedSupplementProps {
   supplement: Supplement;
 }
 
 const SavedSupplement = ({ supplement }: SavedSupplementProps) => {
+  const getMealsIncluded = () => {
+    if (!supplement.mealIncluded) return [];
+    
+    const meals = [];
+    if (supplement.mealIncluded.breakfast) meals.push("Breakfast");
+    if (supplement.mealIncluded.lunch) meals.push("Lunch");
+    if (supplement.mealIncluded.dinner) meals.push("Dinner");
+    return meals;
+  };
+
+  const mealsIncluded = getMealsIncluded();
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{supplement.name}</CardTitle>
+        <div className="flex flex-col space-y-2">
+          <CardTitle>{supplement.name}</CardTitle>
+          <div className="flex items-center space-x-2">
+            <Badge variant="outline" className="text-xs font-normal">
+              Code: {supplement.code}
+            </Badge>
+            {mealsIncluded.length > 0 && (
+              <Badge variant="secondary" className="text-xs font-normal">
+                Meals: {mealsIncluded.join(", ")}
+              </Badge>
+            )}
+          </div>
+        </div>
         <CardDescription>{supplement.description}</CardDescription>
       </CardHeader>
       <CardContent>
