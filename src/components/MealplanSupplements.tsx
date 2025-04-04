@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -295,7 +296,7 @@ const MealplanSupplements = () => {
                     <Label htmlFor="description" className="flex items-center text-base font-medium">
                       Mealplan Name <span className="text-red-500 ml-1">*</span>
                     </Label>
-                    <Textarea
+                    <Input
                       id="description"
                       placeholder="Enter mealplan name"
                       value={description}

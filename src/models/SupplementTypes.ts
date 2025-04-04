@@ -66,6 +66,7 @@ export interface ParameterSet {
   ratePlans: RatePlan[];
   chargeType: ChargeType;
   daysOfWeek: string[];
+  leadTime?: number;
   description?: string;
   roomAmounts?: RoomAmounts;
   occupantAmounts?: OccupantAmounts;

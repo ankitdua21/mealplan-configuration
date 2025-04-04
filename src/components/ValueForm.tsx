@@ -23,6 +23,7 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
   const [chargeType, setChargeType] = useState<ChargeType>("per-room");
   const [description, setDescription] = useState("");
   const [parameters, setParameters] = useState<ParameterSet | null>(null);
+  const [leadTime, setLeadTime] = useState<number>(0);
   
   // Per-room amounts
   const [baseAmount, setBaseAmount] = useState("");
@@ -50,14 +51,19 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
       roomTypes: [...roomTypes],
       ratePlans: [...ratePlans],
       chargeType: "per-room",
-      daysOfWeek: ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
+      daysOfWeek: ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"],
+      leadTime: 0
     });
   }, [roomTypes, ratePlans]);
 
   const handleAddValue = () => {
     if (!parameters) return;
 
-    let updatedParameters = { ...parameters, chargeType };
+    let updatedParameters = { 
+      ...parameters, 
+      chargeType,
+      leadTime: leadTime || 0
+    };
     
     // Add description if provided
     if (description.trim()) {
@@ -123,6 +129,7 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
     setChildAmount("");
     setInfantAmount("");
     setChildAgeRanges([]);
+    setLeadTime(0);
     setOccupancyPricing([
       { id: crypto.randomUUID(), occupantCount: 1, amount: 0 },
       { id: crypto.randomUUID(), occupantCount: 2, amount: 0 }
@@ -133,12 +140,28 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
       roomTypes: [...roomTypes],
       ratePlans: [...ratePlans],
       chargeType: "per-room",
-      daysOfWeek: ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
+      daysOfWeek: ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"],
+      leadTime: 0
     });
   };
 
   const handleParametersChange = (newParameters: ParameterSet) => {
     setParameters(newParameters);
+    // If the newParameters has a leadTime value, update the leadTime state
+    if (newParameters.leadTime !== undefined) {
+      setLeadTime(newParameters.leadTime);
+    }
+  };
+
+  const handleLeadTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseInt(e.target.value) || 0;
+    setLeadTime(value);
+    if (parameters) {
+      setParameters({
+        ...parameters,
+        leadTime: value
+      });
+    }
   };
 
   const addChildAgeRange = () => {
@@ -511,6 +534,21 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
             onChange={handleParametersChange}
             value={parameters || undefined}
           />
+          
+          <div className="mt-4">
+            <Label htmlFor="leadTime" className="text-sm">
+              Lead Time (days)
+            </Label>
+            <Input
+              id="leadTime"
+              type="number"
+              min="0"
+              placeholder="Enter minimum lead time in days"
+              value={leadTime || ''}
+              onChange={handleLeadTimeChange}
+              className="mt-1"
+            />
+          </div>
         </div>
 
         <div className="flex justify-start">
@@ -530,4 +568,3 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
 };
 
 export default ValueForm;
-
