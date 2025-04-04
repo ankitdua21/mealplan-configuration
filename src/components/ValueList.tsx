@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { SupplementValue, RoomType, RatePlan } from "@/models/SupplementTypes";
 import { roomTypes as defaultRoomTypes, ratePlans as defaultRatePlans } from "@/data/dummyData";
+import { Clock } from "lucide-react";
 
 interface ValueListProps {
   values: SupplementValue[];
@@ -107,6 +108,7 @@ const ValueList = ({
               <TableHead>Room Types</TableHead>
               <TableHead>Rate Plans</TableHead>
               <TableHead>Charge Type</TableHead>
+              <TableHead>Lead Time</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -181,6 +183,16 @@ const ValueList = ({
                   <Badge className="whitespace-normal text-xs">
                     {getChargeTypeDetails(value)}
                   </Badge>
+                </TableCell>
+                <TableCell>
+                  {value.parameters.leadTime ? (
+                    <div className="flex items-center">
+                      <Clock size={14} className="mr-1" />
+                      <span>{value.parameters.leadTime} days</span>
+                    </div>
+                  ) : (
+                    <span className="text-muted-foreground">-</span>
+                  )}
                 </TableCell>
                 <TableCell className="text-right">
                   <Button
