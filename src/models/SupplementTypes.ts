@@ -4,6 +4,12 @@ export interface Supplement {
   name: string;
   type: 'mealplan' | 'spa' | 'gym' | 'other';
   description: string;
+  code?: string;
+  mealIncluded?: {
+    breakfast: boolean;
+    lunch: boolean;
+    dinner: boolean;
+  };
   values: SupplementValue[];
 }
 

@@ -1,10 +1,11 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Info, Check, Plus } from "lucide-react";
+import { Info, Check, Plus, Coffee, UtensilsCrossed, Soup } from "lucide-react";
 import { Conflict, Supplement, SupplementValue } from "@/models/SupplementTypes";
 import { roomTypes, ratePlans, supplementTypes } from "@/data/dummyData";
 import ValueForm from "./ValueForm";
@@ -13,10 +14,18 @@ import ConflictResolver from "./ConflictResolver";
 import SavedSupplement from "./SavedSupplement";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const MealplanSupplements = () => {
   const { toast } = useToast();
   const [description, setDescription] = useState("");
+  const [code, setCode] = useState("");
+  const [mealIncluded, setMealIncluded] = useState({
+    breakfast: false,
+    lunch: false,
+    dinner: false
+  });
   const [values, setValues] = useState<SupplementValue[]>([]);
   const [savedSupplements, setSavedSupplements] = useState<Supplement[]>([]);
   const [conflicts, setConflicts] = useState<Conflict[]>([]);
@@ -138,6 +147,24 @@ const MealplanSupplements = () => {
       });
       return;
     }
+
+    if (!code) {
+      toast({
+        title: "Error",
+        description: "Please enter a mealplan code",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!mealIncluded.breakfast && !mealIncluded.lunch && !mealIncluded.dinner) {
+      toast({
+        title: "Error",
+        description: "Please select at least one meal type",
+        variant: "destructive",
+      });
+      return;
+    }
     
     const valuesToSave = [...values];
     if (currentValue) {
@@ -173,6 +200,8 @@ const MealplanSupplements = () => {
       name: "Mealplan",
       type: "mealplan",
       description: description,
+      code: code,
+      mealIncluded: mealIncluded,
       values: valuesToSave,
     };
     
@@ -183,6 +212,12 @@ const MealplanSupplements = () => {
     });
     
     setDescription("");
+    setCode("");
+    setMealIncluded({
+      breakfast: false,
+      lunch: false,
+      dinner: false
+    });
     setValues([]);
     setCurrentValue(null);
     setConflicts([]);
@@ -256,18 +291,77 @@ const MealplanSupplements = () => {
               <Separator className="my-6" />
               
               <div className="mx-auto">
-                <div>
-                  <Label htmlFor="description" className="flex items-center text-base font-medium">
-                    Mealplan Name <span className="text-red-500 ml-1">*</span>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <Label htmlFor="description" className="flex items-center text-base font-medium">
+                      Mealplan Name <span className="text-red-500 ml-1">*</span>
+                    </Label>
+                    <Textarea
+                      id="description"
+                      placeholder="Enter mealplan name"
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      className="mt-1"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="code" className="flex items-center text-base font-medium">
+                      Code <span className="text-red-500 ml-1">*</span>
+                    </Label>
+                    <Input
+                      id="code"
+                      placeholder="Enter mealplan code"
+                      value={code}
+                      onChange={(e) => setCode(e.target.value)}
+                      className="mt-1"
+                      required
+                    />
+                  </div>
+                </div>
+                
+                <div className="mb-4">
+                  <Label className="flex items-center text-base font-medium mb-2">
+                    Meal Included <span className="text-red-500 ml-1">*</span>
                   </Label>
-                  <Textarea
-                    id="description"
-                    placeholder="Enter mealplan name"
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    className="mt-1"
-                    required
-                  />
+                  <div className="flex flex-wrap gap-4 mt-1">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox 
+                        id="breakfast" 
+                        checked={mealIncluded.breakfast}
+                        onCheckedChange={(checked) => 
+                          setMealIncluded(prev => ({...prev, breakfast: checked === true}))
+                        }
+                      />
+                      <Label htmlFor="breakfast" className="font-normal flex items-center gap-1">
+                        <Coffee size={16} /> Breakfast
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox 
+                        id="lunch" 
+                        checked={mealIncluded.lunch}
+                        onCheckedChange={(checked) => 
+                          setMealIncluded(prev => ({...prev, lunch: checked === true}))
+                        }
+                      />
+                      <Label htmlFor="lunch" className="font-normal flex items-center gap-1">
+                        <UtensilsCrossed size={16} /> Lunch
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox 
+                        id="dinner" 
+                        checked={mealIncluded.dinner}
+                        onCheckedChange={(checked) => 
+                          setMealIncluded(prev => ({...prev, dinner: checked === true}))
+                        }
+                      />
+                      <Label htmlFor="dinner" className="font-normal flex items-center gap-1">
+                        <Soup size={16} /> Dinner
+                      </Label>
+                    </div>
+                  </div>
                 </div>
               </div>
             </CardContent>
@@ -309,7 +403,12 @@ const MealplanSupplements = () => {
               size="lg"
               className="bg-green-500 hover:bg-green-600"
               onClick={handleSave}
-              disabled={!description || (values.length === 0 && !currentValue)}
+              disabled={
+                !description.trim() || 
+                !code.trim() || 
+                (!mealIncluded.breakfast && !mealIncluded.lunch && !mealIncluded.dinner) ||
+                (values.length === 0 && !currentValue)
+              }
             >
               Save Mealplan
             </Button>
