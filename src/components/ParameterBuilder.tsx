@@ -7,6 +7,7 @@ import MultiSelect from "./MultiSelect";
 import DateRangePicker from "./DateRangePicker";
 import { Trash, Plus, Calendar, Clock3 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
 
 type DayOfWeek = "monday" | "tuesday" | "wednesday" | "thursday" | "friday" | "saturday" | "sunday";
 
@@ -90,6 +91,14 @@ const ParameterBuilder = ({ roomTypes, ratePlans, onChange, value }: ParameterBu
     setParameters({
       ...parameters,
       daysOfWeek: updatedDays,
+    });
+  };
+
+  const handleLeadTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseInt(e.target.value) || 0;
+    setParameters({
+      ...parameters,
+      leadTime: value,
     });
   };
 
@@ -195,6 +204,21 @@ const ParameterBuilder = ({ roomTypes, ratePlans, onChange, value }: ParameterBu
             ))}
           </div>
         </div>
+      </div>
+      
+      <div className="pt-2">
+        <Label htmlFor="leadTime" className="text-sm flex items-center gap-1 mb-1">
+          <Clock3 size={16} /> Lead Time (days)
+        </Label>
+        <Input
+          id="leadTime"
+          type="number"
+          min="0"
+          placeholder="Enter minimum lead time in days"
+          value={parameters.leadTime || ''}
+          onChange={handleLeadTimeChange}
+          className="max-w-xs"
+        />
       </div>
     </div>
   );

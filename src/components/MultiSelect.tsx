@@ -13,40 +13,51 @@ interface Option {
 }
 
 interface MultiSelectProps {
-  options: Option[];
-  selected: Option[];
+  items?: Option[];
+  options?: Option[];
+  selected?: Option[];
+  selectedItems?: Option[];
   onChange: (selected: Option[]) => void;
   placeholder?: string;
   emptyMessage?: string;
+  className?: string;
 }
 
 const MultiSelect = ({
-  options,
-  selected,
+  items = [],
+  options = [],
+  selected = [],
+  selectedItems = [],
   onChange,
   placeholder = "Select options...",
   emptyMessage = "No options found.",
+  className,
 }: MultiSelectProps) => {
   const [open, setOpen] = useState(false);
+  
+  // Use either items or options prop (for backwards compatibility)
+  const itemsToUse = items.length > 0 ? items : options;
+  // Use either selected or selectedItems prop (for backwards compatibility)
+  const selectedToUse = selected.length > 0 ? selected : selectedItems;
 
   const handleSelect = (option: Option) => {
-    const selectedIndex = selected.findIndex(
+    const selectedIndex = selectedToUse.findIndex(
       (item) => item.id === option.id
     );
     
     let updatedSelected: Option[];
     
     if (selectedIndex === -1) {
-      updatedSelected = [...selected, option];
+      updatedSelected = [...selectedToUse, option];
     } else {
-      updatedSelected = selected.filter((_, index) => index !== selectedIndex);
+      updatedSelected = selectedToUse.filter((_, index) => index !== selectedIndex);
     }
     
     onChange(updatedSelected);
   };
 
   const handleRemove = (option: Option) => {
-    onChange(selected.filter((item) => item.id !== option.id));
+    onChange(selectedToUse.filter((item) => item.id !== option.id));
   };
 
   return (
@@ -56,10 +67,10 @@ const MultiSelect = ({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="w-full justify-between"
+          className={cn("w-full justify-between", className)}
         >
-          {selected.length > 0
-            ? `${selected.length} selected`
+          {selectedToUse.length > 0
+            ? `${selectedToUse.length} selected`
             : placeholder}
           <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
@@ -70,8 +81,8 @@ const MultiSelect = ({
           <CommandList>
             <CommandEmpty>{emptyMessage}</CommandEmpty>
             <CommandGroup className="max-h-[200px] overflow-auto">
-              {options && options.length > 0 ? options.map((option) => {
-                const isSelected = selected.some(
+              {itemsToUse && itemsToUse.length > 0 ? itemsToUse.map((option) => {
+                const isSelected = selectedToUse.some(
                   (item) => item.id === option.id
                 );
                 return (
@@ -95,9 +106,9 @@ const MultiSelect = ({
         </Command>
       </PopoverContent>
       
-      {selected.length > 0 && (
+      {selectedToUse.length > 0 && (
         <div className="flex flex-wrap gap-1 mt-2">
-          {selected.map((option) => (
+          {selectedToUse.map((option) => (
             <Badge
               key={option.id}
               variant="secondary"
