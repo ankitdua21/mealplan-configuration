@@ -14,23 +14,94 @@ import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 
 interface DateRangePickerProps {
-  ranges: DateRange[];
-  onChange: (ranges: DateRange[]) => void;
+  ranges?: DateRange[];
+  onChange?: (ranges: DateRange[]) => void;
+  startDate?: Date;
+  endDate?: Date;
+  onStartDateChange?: (date: Date) => void;
+  onEndDateChange?: (date: Date) => void;
+  className?: string;
 }
 
-const DateRangePicker = ({ ranges, onChange }: DateRangePickerProps) => {
+const DateRangePicker = ({ 
+  ranges, 
+  onChange, 
+  startDate, 
+  endDate,
+  onStartDateChange,
+  onEndDateChange,
+  className 
+}: DateRangePickerProps) => {
   const [isSelecting, setIsSelecting] = useState(false);
   const [tempStartDate, setTempStartDate] = useState<Date | undefined>(undefined);
   const [tempEndDate, setTempEndDate] = useState<Date | undefined>(undefined);
 
+  // If we're using the single date range mode
+  if (startDate !== undefined && endDate !== undefined && onStartDateChange && onEndDateChange) {
+    return (
+      <div className={cn("flex gap-2", className)}>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              className="w-full justify-start text-left font-normal"
+            >
+              <CalendarIcon className="mr-2 h-4 w-4" />
+              {format(startDate, "MMM d, yyyy")} - {format(endDate, "MMM d, yyyy")}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar
+              mode="single"
+              selected={startDate}
+              onSelect={(date) => date && onStartDateChange(date)}
+              initialFocus
+              className={cn("p-3 pointer-events-auto")}
+            />
+            <div className="p-3 border-t border-border">
+              <p className="text-sm">Start date: {format(startDate, "MMM d, yyyy")}</p>
+            </div>
+          </PopoverContent>
+        </Popover>
+        <span className="flex items-center">-</span>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              className="w-full justify-start text-left font-normal"
+            >
+              <CalendarIcon className="mr-2 h-4 w-4" />
+              {format(endDate, "MMM d, yyyy")}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar
+              mode="single"
+              selected={endDate}
+              onSelect={(date) => date && onEndDateChange(date)}
+              initialFocus
+              className={cn("p-3 pointer-events-auto")}
+              disabled={(date) => date < startDate}
+            />
+            <div className="p-3 border-t border-border">
+              <p className="text-sm">End date: {format(endDate, "MMM d, yyyy")}</p>
+            </div>
+          </PopoverContent>
+        </Popover>
+      </div>
+    );
+  }
+
+  // For the multiple ranges mode
   const handleSelect = (date: Date | undefined) => {
-    if (!date) return;
+    if (!date || !ranges || !onChange) return;
 
     if (!tempStartDate) {
       setTempStartDate(date);
     } else if (!tempEndDate && date >= tempStartDate) {
       setTempEndDate(date);
       const newRange: DateRange = {
+        id: crypto.randomUUID(),
         startDate: tempStartDate,
         endDate: date,
       };
@@ -45,10 +116,15 @@ const DateRangePicker = ({ ranges, onChange }: DateRangePickerProps) => {
   };
 
   const removeRange = (index: number) => {
+    if (!ranges || !onChange) return;
     const newRanges = [...ranges];
     newRanges.splice(index, 1);
     onChange(newRanges);
   };
+
+  if (!ranges || !onChange) {
+    return null;
+  }
 
   return (
     <div className="space-y-2">
