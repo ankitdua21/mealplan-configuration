@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -536,26 +537,30 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
                             className="h-10"
                           />
                         </div>
-                        <div className="flex w-full">
-                          <Input
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            placeholder="Amount"
-                            value={childAgeRanges[0]?.amount || childAmount}
-                            onChange={(e) => {
-                              if (childAgeRanges.length === 0) {
-                                setChildAgeRanges([
-                                  { id: crypto.randomUUID(), minAge: 0, maxAge: 0, amount: parseFloat(e.target.value) || 0 }
-                                ]);
-                              } else {
-                                updateChildAgeRange(childAgeRanges[0].id, 'amount', parseFloat(e.target.value) || 0)
-                              }
-                            }}
-                            className="rounded-r-none flex-grow h-10"
-                          />
-                          <div className="bg-muted px-3 flex items-center rounded-r-md border border-l-0 border-input">
-                            {currency}
+                        <div>
+                          <Label htmlFor="age-amount" className="text-sm">Amount</Label>
+                          <div className="flex w-full">
+                            <Input
+                              id="age-amount"
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              placeholder="Amount"
+                              value={childAgeRanges[0]?.amount || childAmount}
+                              onChange={(e) => {
+                                if (childAgeRanges.length === 0) {
+                                  setChildAgeRanges([
+                                    { id: crypto.randomUUID(), minAge: 0, maxAge: 0, amount: parseFloat(e.target.value) || 0 }
+                                  ]);
+                                } else {
+                                  updateChildAgeRange(childAgeRanges[0].id, 'amount', parseFloat(e.target.value) || 0)
+                                }
+                              }}
+                              className="rounded-r-none flex-grow h-10"
+                            />
+                            <div className="bg-muted px-3 flex items-center rounded-r-md border border-l-0 border-input">
+                              {currency}
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -639,7 +644,7 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
                   </div>
 
                   {adultPricing.length > 1 && (
-                    <div className="mt-6 space-y-4">
+                    <div className="mt-6">
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         {adultPricing.filter(p => p.position > 1).map((pricing) => {
                           const childPricingItem = childPricing.find(p => p.id === pricing.id);
@@ -835,4 +840,58 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
                 <div className="mt-4 pt-4 border-t">
                   <Card>
                     <CardHeader className="py-3 px-4">
-                      <CardTitle className="text-base font-medium
+                      <CardTitle className="text-base font-medium">Additional Conditions</CardTitle>
+                    </CardHeader>
+                    <CardContent className="py-3 px-4 space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="leadTime" className="text-sm">Lead Time (days)</Label>
+                          <Input
+                            id="leadTime"
+                            type="number"
+                            min="0"
+                            placeholder="Minimum days before arrival"
+                            value={leadTime || ""}
+                            onChange={(e) => setLeadTime(e.target.value ? parseInt(e.target.value) : undefined)}
+                            className="mt-1"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="minStay" className="text-sm">Minimum Stay (nights)</Label>
+                          <Input
+                            id="minStay"
+                            type="number"
+                            min="0"
+                            placeholder="Minimum nights"
+                            value={minStay || ""}
+                            onChange={(e) => setMinStay(e.target.value ? parseInt(e.target.value) : undefined)}
+                            className="mt-1"
+                          />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
+          
+          <Button
+            type="button"
+            onClick={handleAddValue}
+            className="w-full"
+            disabled={
+              (chargeType === "per-room" && !baseAmount) || 
+              (chargeType === "per-adult-child" && !adultAmount) ||
+              (chargeType === "per-occupant" && (!occupancyPricing.some(p => p.amount > 0)))
+            }
+          >
+            Add Value
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
+export default ValueForm;
