@@ -504,6 +504,7 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
                                 updateChildAgeRange(childAgeRanges[0].id, 'minAge', parseInt(e.target.value) || 0)
                               }
                             }}
+                            className="h-10"
                           />
                         </div>
                         <div>
@@ -524,6 +525,7 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
                                 updateChildAgeRange(childAgeRanges[0].id, 'maxAge', parseInt(e.target.value) || 0)
                               }
                             }}
+                            className="h-10"
                           />
                         </div>
                         <div className="flex w-full">
@@ -542,7 +544,7 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
                                 updateChildAgeRange(childAgeRanges[0].id, 'amount', parseFloat(e.target.value) || 0)
                               }
                             }}
-                            className="rounded-r-none flex-grow"
+                            className="rounded-r-none flex-grow h-10"
                           />
                           <div className="bg-muted px-3 flex items-center rounded-r-md border border-l-0 border-input">
                             {currency}
@@ -561,6 +563,7 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
                               placeholder="Min Age"
                               value={range.minAge || ""}
                               onChange={(e) => updateChildAgeRange(range.id, 'minAge', parseInt(e.target.value) || 0)}
+                              className="h-10"
                             />
                           </div>
                           <div>
@@ -571,6 +574,7 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
                               placeholder="Max Age"
                               value={range.maxAge || ""}
                               onChange={(e) => updateChildAgeRange(range.id, 'maxAge', parseInt(e.target.value) || 0)}
+                              className="h-10"
                             />
                           </div>
                           <div className="flex w-full">
@@ -581,7 +585,7 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
                               placeholder="Amount"
                               value={range.amount || ""}
                               onChange={(e) => updateChildAgeRange(range.id, 'amount', parseFloat(e.target.value) || 0)}
-                              className="rounded-r-none flex-grow"
+                              className="rounded-r-none flex-grow h-10"
                             />
                             <div className="bg-muted px-3 flex items-center rounded-r-md border border-l-0 border-input">
                               {currency}
@@ -625,14 +629,14 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
                       className="mt-2"
                     >
                       <Plus className="mr-2 h-4 w-4" />
-                      Add Next Positions
+                      Add Next Adult
                     </Button>
                   </div>
 
                   {adultPricing.length > 1 && (
                     <div className="mt-6 space-y-4">
                       <h4 className="text-sm font-medium">Adult Position Pricing</h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         {adultPricing.filter(p => p.position > 1).map((pricing) => (
                           <div key={pricing.id} className="flex items-center space-x-2">
                             <div className="flex-1">
@@ -674,7 +678,7 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
                   {childPricing.length > 1 && (
                     <div className="mt-6 space-y-4">
                       <h4 className="text-sm font-medium">Child Position Pricing</h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         {childPricing.filter(p => p.position > 1).map((pricing) => (
                           <div key={pricing.id} className="flex items-center space-x-2">
                             <div className="flex-1">
@@ -715,7 +719,7 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
                   {infantPricing.length > 1 && (
                     <div className="mt-6 space-y-4">
                       <h4 className="text-sm font-medium">Infant Position Pricing</h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         {infantPricing.filter(p => p.position > 1).map((pricing) => (
                           <div key={pricing.id} className="flex items-center space-x-2">
                             <div className="flex-1">
