@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -258,6 +257,27 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
     setOccupancyPricing(occupancyPricing.filter(pricing => pricing.id !== id));
   };
 
+  const addNextPositions = () => {
+    const nextAdultPosition = Math.max(...adultPricing.map(p => p.position)) + 1;
+    const nextChildPosition = Math.max(...childPricing.map(p => p.position)) + 1;
+    const nextInfantPosition = Math.max(...infantPricing.map(p => p.position)) + 1;
+    
+    setAdultPricing([
+      ...adultPricing,
+      { id: crypto.randomUUID(), position: nextAdultPosition, amount: 0 }
+    ]);
+    
+    setChildPricing([
+      ...childPricing,
+      { id: crypto.randomUUID(), position: nextChildPosition, amount: 0 }
+    ]);
+    
+    setInfantPricing([
+      ...infantPricing,
+      { id: crypto.randomUUID(), position: nextInfantPosition, amount: 0 }
+    ]);
+  };
+
   return (
     <Card id="valueForm">
       <CardHeader>
@@ -506,7 +526,7 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
                             }}
                           />
                         </div>
-                        <div className="flex">
+                        <div className="flex w-full">
                           <Input
                             type="number"
                             min="0"
@@ -522,7 +542,7 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
                                 updateChildAgeRange(childAgeRanges[0].id, 'amount', parseFloat(e.target.value) || 0)
                               }
                             }}
-                            className="rounded-r-none"
+                            className="rounded-r-none flex-grow"
                           />
                           <div className="bg-muted px-3 flex items-center rounded-r-md border border-l-0 border-input">
                             {currency}
@@ -553,7 +573,7 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
                               onChange={(e) => updateChildAgeRange(range.id, 'maxAge', parseInt(e.target.value) || 0)}
                             />
                           </div>
-                          <div className="flex">
+                          <div className="flex w-full">
                             <Input
                               type="number"
                               min="0"
@@ -561,7 +581,7 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
                               placeholder="Amount"
                               value={range.amount || ""}
                               onChange={(e) => updateChildAgeRange(range.id, 'amount', parseFloat(e.target.value) || 0)}
-                              className="rounded-r-none"
+                              className="rounded-r-none flex-grow"
                             />
                             <div className="bg-muted px-3 flex items-center rounded-r-md border border-l-0 border-input">
                               {currency}
@@ -601,31 +621,11 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
                       type="button"
                       variant="outline"
                       size="sm"
-                      onClick={addAdultPricing}
+                      onClick={addNextPositions}
                       className="mt-2"
                     >
                       <Plus className="mr-2 h-4 w-4" />
-                      Add Adult Position
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={addChildPricing}
-                      className="mt-2"
-                    >
-                      <Plus className="mr-2 h-4 w-4" />
-                      Add Child Position
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={addInfantPricing}
-                      className="mt-2"
-                    >
-                      <Plus className="mr-2 h-4 w-4" />
-                      Add Infant Position
+                      Add Next Positions
                     </Button>
                   </div>
 
