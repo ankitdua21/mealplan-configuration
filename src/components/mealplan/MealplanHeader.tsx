@@ -46,7 +46,7 @@ const MealplanHeader = ({
     <Card>
       <CardHeader>
         <div className="flex justify-between items-center">
-          <CardTitle>Configure New Meal Plan</CardTitle>
+          <CardTitle>Configure New Mealplan</CardTitle>
           {hasSavedSupplements && (
             <div className="text-sm text-muted-foreground flex items-center">
               <Info size={16} className="mr-1" />
