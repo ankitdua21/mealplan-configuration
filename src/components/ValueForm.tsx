@@ -739,17 +739,15 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
         </div>
 
         <div className="space-y-4">
-          <div className="border rounded-md">
-            <div className="px-4 py-3">
-              {parameters && (
-                <ParameterBuilder
-                  roomTypes={roomTypes}
-                  ratePlans={ratePlans}
-                  onChange={handleParametersChange}
-                  value={{...parameters, showRoomTypes: true, showRatePlans: true, showDateRanges: false, showDaysOfWeek: false}}
-                />
-              )}
-            </div>
+          <div>
+            {parameters && (
+              <ParameterBuilder
+                roomTypes={roomTypes}
+                ratePlans={ratePlans}
+                onChange={handleParametersChange}
+                value={{...parameters, showRoomTypes: true, showRatePlans: true, showDateRanges: false, showDaysOfWeek: false}}
+              />
+            )}
           </div>
           
           <Collapsible 
