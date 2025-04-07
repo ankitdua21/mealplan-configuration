@@ -229,8 +229,6 @@ const MealplanSupplements = () => {
 
   return (
     <div className="container mx-auto py-8 px-4 max-w-6xl">
-      <h1 className="text-2xl font-bold mb-6">Hotel Supplements Configuration</h1>
-      
       <SavedSupplementsList 
         supplements={savedSupplements} 
         onClearAll={() => setSavedSupplements([])} 

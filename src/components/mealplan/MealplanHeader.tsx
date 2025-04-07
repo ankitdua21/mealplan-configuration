@@ -6,7 +6,6 @@ import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Coffee, UtensilsCrossed, Soup } from "lucide-react";
-import { supplementTypes } from "@/data/dummyData";
 import { Button } from "@/components/ui/button";
 
 interface MealplanHeaderProps {
@@ -32,11 +31,22 @@ const MealplanHeader = ({
   setMealIncluded,
   hasSavedSupplements
 }: MealplanHeaderProps) => {
+  // Define the new card types array
+  const cardTypes = [
+    { id: "metadata", name: "Metadata", disabled: true },
+    { id: "roomtypes", name: "Roomtypes", disabled: true },
+    { id: "policies", name: "Policies", disabled: true },
+    { id: "rateplans", name: "Rateplans", disabled: true },
+    { id: "taxes", name: "Taxes", disabled: true },
+    { id: "mealplans", name: "Mealplans", disabled: false },
+    { id: "supplements", name: "Supplements", disabled: true }
+  ];
+
   return (
     <Card>
       <CardHeader>
         <div className="flex justify-between items-center">
-          <CardTitle>Configure New Supplement</CardTitle>
+          <CardTitle>Configure New Meal Plan</CardTitle>
           {hasSavedSupplements && (
             <div className="text-sm text-muted-foreground flex items-center">
               <Info size={16} className="mr-1" />
@@ -47,12 +57,12 @@ const MealplanHeader = ({
       </CardHeader>
       <CardContent>
         <div className="flex gap-2 mb-6 flex-nowrap overflow-x-auto pb-2">
-          {supplementTypes.map((type) => (
+          {cardTypes.map((type) => (
             <Button
               key={type.id}
-              variant={type.type === "mealplan" ? "default" : "outline"}
+              variant={type.id === "mealplans" ? "default" : "outline"}
               className="h-16 flex-shrink-0 min-w-[120px]"
-              disabled={type.type !== "mealplan"}
+              disabled={type.disabled}
             >
               {type.name}
             </Button>
