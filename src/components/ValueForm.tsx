@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -539,7 +538,7 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
                         </div>
                         <div>
                           <Label htmlFor="age-amount" className="text-sm">Amount</Label>
-                          <div className="flex w-full">
+                          <div className="flex mt-1">
                             <Input
                               id="age-amount"
                               type="number"
@@ -838,60 +837,3 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
                 </div>
 
                 <div className="mt-4 pt-4 border-t">
-                  <Card>
-                    <CardHeader className="py-3 px-4">
-                      <CardTitle className="text-base font-medium">Additional Conditions</CardTitle>
-                    </CardHeader>
-                    <CardContent className="py-3 px-4 space-y-4">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <Label htmlFor="leadTime" className="text-sm">Lead Time (days)</Label>
-                          <Input
-                            id="leadTime"
-                            type="number"
-                            min="0"
-                            placeholder="Minimum days before arrival"
-                            value={leadTime || ""}
-                            onChange={(e) => setLeadTime(e.target.value ? parseInt(e.target.value) : undefined)}
-                            className="mt-1"
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="minStay" className="text-sm">Minimum Stay (nights)</Label>
-                          <Input
-                            id="minStay"
-                            type="number"
-                            min="0"
-                            placeholder="Minimum nights"
-                            value={minStay || ""}
-                            onChange={(e) => setMinStay(e.target.value ? parseInt(e.target.value) : undefined)}
-                            className="mt-1"
-                          />
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              </div>
-            </CollapsibleContent>
-          </Collapsible>
-          
-          <Button
-            type="button"
-            onClick={handleAddValue}
-            className="w-full"
-            disabled={
-              (chargeType === "per-room" && !baseAmount) || 
-              (chargeType === "per-adult-child" && !adultAmount) ||
-              (chargeType === "per-occupant" && (!occupancyPricing.some(p => p.amount > 0)))
-            }
-          >
-            Add Value
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
-  );
-};
-
-export default ValueForm;
