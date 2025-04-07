@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ParameterSet, RatePlan, RoomType, SupplementValue, ChargeType, AgeRange, OccupancyPricing } from "@/models/SupplementTypes";
+import { ParameterSet, RatePlan, RoomType, SupplementValue, ChargeType, AgeRange, OccupancyPricing, PositionPricing } from "@/models/SupplementTypes";
 import ParameterBuilder from "./ParameterBuilder";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -45,17 +45,17 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
   const [childAgeRanges, setChildAgeRanges] = useState<AgeRange[]>([]);
   
   // Per-adult occupant specific pricing
-  const [adultPricing, setAdultPricing] = useState<{id: string, position: number, amount: number}[]>([
+  const [adultPricing, setAdultPricing] = useState<PositionPricing[]>([
     { id: crypto.randomUUID(), position: 1, amount: 0 }
   ]);
   
   // Per-child occupant specific pricing
-  const [childPricing, setChildPricing] = useState<{id: string, position: number, amount: number}[]>([
+  const [childPricing, setChildPricing] = useState<PositionPricing[]>([
     { id: crypto.randomUUID(), position: 1, amount: 0 }
   ]);
   
   // Per-infant occupant specific pricing
-  const [infantPricing, setInfantPricing] = useState<{id: string, position: number, amount: number}[]>([
+  const [infantPricing, setInfantPricing] = useState<PositionPricing[]>([
     { id: crypto.randomUUID(), position: 1, amount: 0 }
   ]);
   
@@ -783,10 +783,10 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
                 <div id="dateRangesContainer">
                   {parameters?.dateRanges && (
                     <ParameterBuilder
-                      roomTypes={roomTypes.map(rt => ({...rt, name: `${rt.name} - ${rt.code}`}))}
-                      ratePlans={ratePlans.map(rp => ({...rp, name: `${rp.name} - ${rp.code}`}))}
+                      roomTypes={roomTypes}
+                      ratePlans={ratePlans}
                       onChange={handleParametersChange}
-                      value={{...parameters, showDaysOfWeek: false, showRoomTypes: false, showRatePlans: false}}
+                      value={{...parameters, showDateRanges: true, showDaysOfWeek: false, showRoomTypes: false, showRatePlans: false}}
                     />
                   )}
                 </div>
@@ -807,10 +807,10 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
             <CollapsibleContent className="px-4 py-3">
               {parameters && (
                 <ParameterBuilder
-                  roomTypes={roomTypes.map(rt => ({...rt, name: `${rt.name} - ${rt.code}`}))}
-                  ratePlans={ratePlans.map(rp => ({...rp, name: `${rp.name} - ${rp.code}`}))}
+                  roomTypes={roomTypes}
+                  ratePlans={ratePlans}
                   onChange={handleParametersChange}
-                  value={{...parameters, showDateRanges: false, showRoomTypes: false, showRatePlans: false}}
+                  value={{...parameters, showDateRanges: false, showDaysOfWeek: true, showRoomTypes: false, showRatePlans: false}}
                 />
               )}
             </CollapsibleContent>
@@ -869,10 +869,10 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
             <div className="px-4 py-3">
               {parameters && (
                 <ParameterBuilder
-                  roomTypes={roomTypes.map(rt => ({...rt, name: `${rt.name} - ${rt.code}`}))}
-                  ratePlans={ratePlans.map(rp => ({...rp, name: `${rp.name} - ${rp.code}`}))}
+                  roomTypes={roomTypes}
+                  ratePlans={ratePlans}
                   onChange={handleParametersChange}
-                  value={{...parameters, showDateRanges: false, showDaysOfWeek: false}}
+                  value={{...parameters, showRoomTypes: true, showRatePlans: true, showDateRanges: false, showDaysOfWeek: false}}
                 />
               )}
             </div>
