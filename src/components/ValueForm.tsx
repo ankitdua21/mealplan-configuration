@@ -26,8 +26,7 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
   const [leadTime, setLeadTime] = useState<number | undefined>(undefined);
   const [minStay, setMinStay] = useState<number | undefined>(undefined);
   
-  const [isDateRangeOpen, setIsDateRangeOpen] = useState(false);
-  const [isBookingWindowOpen, setIsBookingWindowOpen] = useState(false);
+  const [isTargetingConditionsOpen, setIsTargetingConditionsOpen] = useState(false);
   
   const [baseAmount, setBaseAmount] = useState("");
   const [extraAdultAmount, setExtraAdultAmount] = useState("");
@@ -162,8 +161,7 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
       chargeType: "per-room",
       daysOfWeek: ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
     });
-    setIsDateRangeOpen(false);
-    setIsBookingWindowOpen(false);
+    setIsTargetingConditionsOpen(false);
   };
 
   const handleParametersChange = (newParameters: ParameterSet) => {
@@ -755,13 +753,13 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
           </div>
           
           <Collapsible 
-            open={isDateRangeOpen} 
-            onOpenChange={setIsDateRangeOpen}
+            open={isTargetingConditionsOpen} 
+            onOpenChange={setIsTargetingConditionsOpen}
             className="border rounded-md"
           >
             <CollapsibleTrigger className="flex items-center justify-between w-full px-4 py-3 font-medium bg-gray-50">
-              <span>Date Ranges</span>
-              {isDateRangeOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+              <span>Targeting Conditions</span>
+              {isTargetingConditionsOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
             </CollapsibleTrigger>
             <CollapsibleContent className="px-4 py-3">
               <div className="space-y-4">
@@ -790,50 +788,40 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
                     />
                   )}
                 </div>
-              </div>
-            </CollapsibleContent>
-          </Collapsible>
-          
-          <Collapsible 
-            open={isBookingWindowOpen} 
-            onOpenChange={setIsBookingWindowOpen}
-            className="border rounded-md"
-          >
-            <CollapsibleTrigger className="flex items-center justify-between w-full px-4 py-3 font-medium bg-gray-50">
-              <span>Booking Window Configuration</span>
-              {isBookingWindowOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
-            </CollapsibleTrigger>
-            <CollapsibleContent className="px-4 py-3 space-y-4">
-              <div className="flex items-center space-x-2">
-                <Label htmlFor="leadTime" className="text-sm font-medium">
-                  Lead Time
-                </Label>
-                <Input
-                  id="leadTime"
-                  type="number"
-                  min="0"
-                  max="500"
-                  placeholder="0"
-                  value={leadTime === undefined ? "" : leadTime}
-                  onChange={(e) => setLeadTime(e.target.value ? parseInt(e.target.value) : undefined)}
-                  className="w-24 h-8"
-                />
-              </div>
-              
-              <div className="flex items-center space-x-2">
-                <Label htmlFor="minStay" className="text-sm font-medium">
-                  Minimum Length of Stay
-                </Label>
-                <Input
-                  id="minStay"
-                  type="number"
-                  min="0"
-                  max="99"
-                  placeholder="0"
-                  value={minStay === undefined ? "" : minStay}
-                  onChange={(e) => setMinStay(e.target.value ? parseInt(e.target.value) : undefined)}
-                  className="w-24 h-8"
-                />
+
+                <div className="space-y-4 mt-4 pt-4 border-t">
+                  <div className="flex items-center space-x-2">
+                    <Label htmlFor="leadTime" className="text-sm font-medium">
+                      Lead Time
+                    </Label>
+                    <Input
+                      id="leadTime"
+                      type="number"
+                      min="0"
+                      max="500"
+                      placeholder="0"
+                      value={leadTime === undefined ? "" : leadTime}
+                      onChange={(e) => setLeadTime(e.target.value ? parseInt(e.target.value) : undefined)}
+                      className="w-24 h-8"
+                    />
+                  </div>
+                  
+                  <div className="flex items-center space-x-2">
+                    <Label htmlFor="minStay" className="text-sm font-medium">
+                      Minimum Length of Stay
+                    </Label>
+                    <Input
+                      id="minStay"
+                      type="number"
+                      min="0"
+                      max="99"
+                      placeholder="0"
+                      value={minStay === undefined ? "" : minStay}
+                      onChange={(e) => setMinStay(e.target.value ? parseInt(e.target.value) : undefined)}
+                      className="w-24 h-8"
+                    />
+                  </div>
+                </div>
               </div>
             </CollapsibleContent>
           </Collapsible>

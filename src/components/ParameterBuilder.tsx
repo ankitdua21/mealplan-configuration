@@ -4,7 +4,6 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { ChargeType, DateRange, ParameterSet, RatePlan, RoomType } from "@/models/SupplementTypes";
 import DateRangePicker from "./DateRangePicker";
-import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 
 interface ParameterBuilderProps {
@@ -137,111 +136,109 @@ const ParameterBuilder = ({
   const showDaysOfWeek = value?.showDaysOfWeek !== false;
 
   return (
-    <Card>
-      <CardContent className="pt-6 space-y-4">
-        {(showRoomTypes || showRatePlans) && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {showRoomTypes && (
+    <div className="space-y-4">
+      {(showRoomTypes || showRatePlans) && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {showRoomTypes && (
+            <div className="space-y-2">
+              <Label>Room Types</Label>
               <div className="space-y-2">
-                <Label>Room Types</Label>
-                <div className="space-y-2">
-                  {roomTypes.map((roomType) => (
-                    <div key={roomType.id} className="flex items-center space-x-2">
-                      <Checkbox 
-                        id={`room-${roomType.id}`}
-                        checked={parameters.roomTypes.some(rt => rt.id === roomType.id)}
-                        onCheckedChange={() => handleRoomTypeToggle(roomType)}
-                      />
-                      <Label
-                        htmlFor={`room-${roomType.id}`}
-                        className="cursor-pointer"
-                      >
-                        {roomType.name} {roomType.code ? `- ${roomType.code}` : ''}
-                      </Label>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {showRatePlans && (
-              <div className="space-y-2">
-                <Label>Rate Plans</Label>
-                <div className="space-y-2">
-                  {ratePlans.map((ratePlan) => (
-                    <div key={ratePlan.id} className="flex items-center space-x-2">
-                      <Checkbox 
-                        id={`rate-${ratePlan.id}`}
-                        checked={parameters.ratePlans.some(rp => rp.id === ratePlan.id)}
-                        onCheckedChange={() => handleRatePlanToggle(ratePlan)}
-                      />
-                      <Label
-                        htmlFor={`rate-${ratePlan.id}`}
-                        className="cursor-pointer"
-                      >
-                        {ratePlan.name} {ratePlan.code ? `- ${ratePlan.code}` : ''}
-                      </Label>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {showDateRanges && (
-          <div className="space-y-2">
-            <Label>Date Ranges</Label>
-            <DateRangePicker 
-              ranges={parameters.dateRanges} 
-              onChange={handleDateRangeChange} 
-            />
-          </div>
-        )}
-
-        {showDaysOfWeek && (
-          <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <Label>Days of Week</Label>
-              <div className="space-x-2">
-                <button 
-                  type="button"
-                  onClick={() => toggleAllDays(true)}
-                  className="text-xs text-blue-600 hover:text-blue-800"
-                >
-                  Select All
-                </button>
-                <button 
-                  type="button"
-                  onClick={() => toggleAllDays(false)}
-                  className="text-xs text-blue-600 hover:text-blue-800"
-                >
-                  Clear All
-                </button>
+                {roomTypes.map((roomType) => (
+                  <div key={roomType.id} className="flex items-center space-x-2">
+                    <Checkbox 
+                      id={`room-${roomType.id}`}
+                      checked={parameters.roomTypes.some(rt => rt.id === roomType.id)}
+                      onCheckedChange={() => handleRoomTypeToggle(roomType)}
+                    />
+                    <Label
+                      htmlFor={`room-${roomType.id}`}
+                      className="cursor-pointer"
+                    >
+                      {roomType.name} {roomType.code ? `- ${roomType.code}` : ''}
+                    </Label>
+                  </div>
+                ))}
               </div>
             </div>
-            <div className="flex flex-wrap gap-2 mt-2">
-              {DaysOfWeek.map((day) => (
-                <div key={day.id} className="flex items-center">
-                  <Checkbox 
-                    id={`day-${day.id}`}
-                    checked={parameters.daysOfWeek.includes(day.id)}
-                    onCheckedChange={() => handleDayOfWeekToggle(day.id)}
-                    className="mr-1.5"
-                  />
-                  <Label
-                    htmlFor={`day-${day.id}`}
-                    className="cursor-pointer text-sm"
-                  >
-                    {day.label}
-                  </Label>
-                </div>
-              ))}
+          )}
+
+          {showRatePlans && (
+            <div className="space-y-2">
+              <Label>Rate Plans</Label>
+              <div className="space-y-2">
+                {ratePlans.map((ratePlan) => (
+                  <div key={ratePlan.id} className="flex items-center space-x-2">
+                    <Checkbox 
+                      id={`rate-${ratePlan.id}`}
+                      checked={parameters.ratePlans.some(rp => rp.id === ratePlan.id)}
+                      onCheckedChange={() => handleRatePlanToggle(ratePlan)}
+                    />
+                    <Label
+                      htmlFor={`rate-${ratePlan.id}`}
+                      className="cursor-pointer"
+                    >
+                      {ratePlan.name} {ratePlan.code ? `- ${ratePlan.code}` : ''}
+                    </Label>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {showDateRanges && (
+        <div className="space-y-2">
+          <Label>Date Ranges</Label>
+          <DateRangePicker 
+            ranges={parameters.dateRanges} 
+            onChange={handleDateRangeChange} 
+          />
+        </div>
+      )}
+
+      {showDaysOfWeek && (
+        <div className="space-y-2">
+          <div className="flex justify-between items-center">
+            <Label>Days of Week</Label>
+            <div className="space-x-2">
+              <button 
+                type="button"
+                onClick={() => toggleAllDays(true)}
+                className="text-xs text-blue-600 hover:text-blue-800"
+              >
+                Select All
+              </button>
+              <button 
+                type="button"
+                onClick={() => toggleAllDays(false)}
+                className="text-xs text-blue-600 hover:text-blue-800"
+              >
+                Clear All
+              </button>
             </div>
           </div>
-        )}
-      </CardContent>
-    </Card>
+          <div className="flex flex-wrap gap-2 mt-2">
+            {DaysOfWeek.map((day) => (
+              <div key={day.id} className="flex items-center">
+                <Checkbox 
+                  id={`day-${day.id}`}
+                  checked={parameters.daysOfWeek.includes(day.id)}
+                  onCheckedChange={() => handleDayOfWeekToggle(day.id)}
+                  className="mr-1.5"
+                />
+                <Label
+                  htmlFor={`day-${day.id}`}
+                  className="cursor-pointer text-sm"
+                >
+                  {day.label}
+                </Label>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
 
