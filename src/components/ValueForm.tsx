@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -764,21 +765,17 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
             <CollapsibleContent className="px-4 py-3">
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label>Date Ranges</Label>
-                  <div id="dateRangesContainer">
-                    {parameters && (
-                      <ParameterBuilder
-                        roomTypes={roomTypes}
-                        ratePlans={ratePlans}
-                        onChange={handleParametersChange}
-                        value={{...parameters, showDateRanges: true, showDaysOfWeek: false, showRoomTypes: false, showRatePlans: false}}
-                      />
-                    )}
-                  </div>
+                  {parameters && (
+                    <ParameterBuilder
+                      roomTypes={roomTypes}
+                      ratePlans={ratePlans}
+                      onChange={handleParametersChange}
+                      value={{...parameters, showDateRanges: true, showDaysOfWeek: false, showRoomTypes: false, showRatePlans: false}}
+                    />
+                  )}
                 </div>
                 
                 <div className="space-y-2 mt-4 pt-4 border-t">
-                  <Label>Days of Week</Label>
                   {parameters && (
                     <ParameterBuilder
                       roomTypes={roomTypes}
@@ -789,38 +786,45 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
                   )}
                 </div>
 
-                <div className="space-y-4 mt-4 pt-4 border-t">
-                  <div className="flex items-center space-x-2">
-                    <Label htmlFor="leadTime" className="text-sm font-medium">
-                      Lead Time
-                    </Label>
-                    <Input
-                      id="leadTime"
-                      type="number"
-                      min="0"
-                      max="500"
-                      placeholder="0"
-                      value={leadTime === undefined ? "" : leadTime}
-                      onChange={(e) => setLeadTime(e.target.value ? parseInt(e.target.value) : undefined)}
-                      className="w-24 h-8"
-                    />
-                  </div>
-                  
-                  <div className="flex items-center space-x-2">
-                    <Label htmlFor="minStay" className="text-sm font-medium">
-                      Minimum Length of Stay
-                    </Label>
-                    <Input
-                      id="minStay"
-                      type="number"
-                      min="0"
-                      max="99"
-                      placeholder="0"
-                      value={minStay === undefined ? "" : minStay}
-                      onChange={(e) => setMinStay(e.target.value ? parseInt(e.target.value) : undefined)}
-                      className="w-24 h-8"
-                    />
-                  </div>
+                <div className="mt-4 pt-4 border-t">
+                  <Card>
+                    <CardHeader className="py-3 px-4">
+                      <CardTitle className="text-base font-medium">Booking Configuration</CardTitle>
+                    </CardHeader>
+                    <CardContent className="py-3 px-4 space-y-4">
+                      <div className="flex items-center space-x-2">
+                        <Label htmlFor="leadTime" className="text-sm font-medium">
+                          Lead Time
+                        </Label>
+                        <Input
+                          id="leadTime"
+                          type="number"
+                          min="0"
+                          max="500"
+                          placeholder="0"
+                          value={leadTime === undefined ? "" : leadTime}
+                          onChange={(e) => setLeadTime(e.target.value ? parseInt(e.target.value) : undefined)}
+                          className="w-24 h-8"
+                        />
+                      </div>
+                      
+                      <div className="flex items-center space-x-2">
+                        <Label htmlFor="minStay" className="text-sm font-medium">
+                          Minimum Length of Stay
+                        </Label>
+                        <Input
+                          id="minStay"
+                          type="number"
+                          min="0"
+                          max="99"
+                          placeholder="0"
+                          value={minStay === undefined ? "" : minStay}
+                          onChange={(e) => setMinStay(e.target.value ? parseInt(e.target.value) : undefined)}
+                          className="w-24 h-8"
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
               </div>
             </CollapsibleContent>
