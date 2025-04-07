@@ -262,20 +262,28 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
     const nextChildPosition = Math.max(...childPricing.map(p => p.position)) + 1;
     const nextInfantPosition = Math.max(...infantPricing.map(p => p.position)) + 1;
     
+    const nextId = crypto.randomUUID();
+    
     setAdultPricing([
       ...adultPricing,
-      { id: crypto.randomUUID(), position: nextAdultPosition, amount: 0 }
+      { id: nextId, position: nextAdultPosition, amount: 0 }
     ]);
     
     setChildPricing([
       ...childPricing,
-      { id: crypto.randomUUID(), position: nextChildPosition, amount: 0 }
+      { id: nextId, position: nextChildPosition, amount: 0 }
     ]);
     
     setInfantPricing([
       ...infantPricing,
-      { id: crypto.randomUUID(), position: nextInfantPosition, amount: 0 }
+      { id: nextId, position: nextInfantPosition, amount: 0 }
     ]);
+  };
+  
+  const removePositionGroup = (id: string) => {
+    setAdultPricing(adultPricing.filter(pricing => pricing.id !== id));
+    setChildPricing(childPricing.filter(pricing => pricing.id !== id));
+    setInfantPricing(infantPricing.filter(pricing => pricing.id !== id));
   };
 
   return (
@@ -617,9 +625,6 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
                 )}
                 
                 <div className="space-y-4 pt-4 border-t">
-                  <div className="flex justify-between items-center">
-                    <h4 className="text-sm font-medium">Additional Pricing</h4>
-                  </div>
                   <div className="flex flex-wrap gap-2">
                     <Button
                       type="button"
@@ -635,124 +640,90 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
 
                   {adultPricing.length > 1 && (
                     <div className="mt-6 space-y-4">
-                      <h4 className="text-sm font-medium">Adult Position Pricing</h4>
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        {adultPricing.filter(p => p.position > 1).map((pricing) => (
-                          <div key={pricing.id} className="flex items-center space-x-2">
-                            <div className="flex-1">
-                              <Label htmlFor={`adult-${pricing.id}`} className="text-sm">
-                                {pricing.position === 2 ? "2nd Adult" : pricing.position === 3 ? "3rd Adult" : `${pricing.position}th Adult`}
-                              </Label>
-                              <div className="flex mt-1">
-                                <Input
-                                  id={`adult-${pricing.id}`}
-                                  type="number"
-                                  min="0"
-                                  step="0.01"
-                                  placeholder="0.00"
-                                  value={pricing.amount || ""}
-                                  onChange={(e) => updateAdultPricing(pricing.id, 'amount', parseFloat(e.target.value) || 0)}
-                                  className="rounded-r-none"
-                                  required
-                                />
-                                <div className="bg-muted px-3 flex items-center rounded-r-md border border-l-0 border-input">
-                                  {currency}
+                        {adultPricing.filter(p => p.position > 1).map((pricing) => {
+                          const childPricingItem = childPricing.find(p => p.id === pricing.id);
+                          const infantPricingItem = infantPricing.find(p => p.id === pricing.id);
+                          return (
+                            <div key={pricing.id} className="flex flex-col space-y-4 p-4 border rounded-md relative">
+                              <div>
+                                <Label htmlFor={`adult-${pricing.id}`} className="text-sm">
+                                  {pricing.position === 2 ? "2nd Adult" : pricing.position === 3 ? "3rd Adult" : `${pricing.position}th Adult`}
+                                  <span className="text-red-500 ml-1">*</span>
+                                </Label>
+                                <div className="flex mt-1">
+                                  <Input
+                                    id={`adult-${pricing.id}`}
+                                    type="number"
+                                    min="0"
+                                    step="0.01"
+                                    placeholder="0.00"
+                                    value={pricing.amount || ""}
+                                    onChange={(e) => updateAdultPricing(pricing.id, 'amount', parseFloat(e.target.value) || 0)}
+                                    className="rounded-r-none"
+                                    required
+                                  />
+                                  <div className="bg-muted px-3 flex items-center rounded-r-md border border-l-0 border-input">
+                                    {currency}
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => removeAdultPricing(pricing.id)}
-                              className="mt-6"
-                            >
-                              <Trash className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  
-                  {childPricing.length > 1 && (
-                    <div className="mt-6 space-y-4">
-                      <h4 className="text-sm font-medium">Child Position Pricing</h4>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        {childPricing.filter(p => p.position > 1).map((pricing) => (
-                          <div key={pricing.id} className="flex items-center space-x-2">
-                            <div className="flex-1">
-                              <Label htmlFor={`child-${pricing.id}`} className="text-sm">
-                                {pricing.position === 2 ? "2nd Child" : pricing.position === 3 ? "3rd Child" : `${pricing.position}th Child`}
-                              </Label>
-                              <div className="flex mt-1">
-                                <Input
-                                  id={`child-${pricing.id}`}
-                                  type="number"
-                                  min="0"
-                                  step="0.01"
-                                  placeholder="0.00"
-                                  value={pricing.amount || ""}
-                                  onChange={(e) => updateChildPricing(pricing.id, 'amount', parseFloat(e.target.value) || 0)}
-                                  className="rounded-r-none"
-                                />
-                                <div className="bg-muted px-3 flex items-center rounded-r-md border border-l-0 border-input">
-                                  {currency}
+                              {childPricingItem && (
+                                <div>
+                                  <Label htmlFor={`child-${pricing.id}`} className="text-sm">
+                                    {childPricingItem.position === 2 ? "2nd Child" : childPricingItem.position === 3 ? "3rd Child" : `${childPricingItem.position}th Child`}
+                                  </Label>
+                                  <div className="flex mt-1">
+                                    <Input
+                                      id={`child-${pricing.id}`}
+                                      type="number"
+                                      min="0"
+                                      step="0.01"
+                                      placeholder="0.00"
+                                      value={childPricingItem.amount || ""}
+                                      onChange={(e) => updateChildPricing(childPricingItem.id, 'amount', parseFloat(e.target.value) || 0)}
+                                      className="rounded-r-none"
+                                    />
+                                    <div className="bg-muted px-3 flex items-center rounded-r-md border border-l-0 border-input">
+                                      {currency}
+                                    </div>
+                                  </div>
                                 </div>
-                              </div>
-                            </div>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => removeChildPricing(pricing.id)}
-                              className="mt-6"
-                            >
-                              <Trash className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  
-                  {infantPricing.length > 1 && (
-                    <div className="mt-6 space-y-4">
-                      <h4 className="text-sm font-medium">Infant Position Pricing</h4>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        {infantPricing.filter(p => p.position > 1).map((pricing) => (
-                          <div key={pricing.id} className="flex items-center space-x-2">
-                            <div className="flex-1">
-                              <Label htmlFor={`infant-${pricing.id}`} className="text-sm">
-                                {pricing.position === 2 ? "2nd Infant" : pricing.position === 3 ? "3rd Infant" : `${pricing.position}th Infant`}
-                              </Label>
-                              <div className="flex mt-1">
-                                <Input
-                                  id={`infant-${pricing.id}`}
-                                  type="number"
-                                  min="0"
-                                  step="0.01"
-                                  placeholder="0.00"
-                                  value={pricing.amount || ""}
-                                  onChange={(e) => updateInfantPricing(pricing.id, 'amount', parseFloat(e.target.value) || 0)}
-                                  className="rounded-r-none"
-                                />
-                                <div className="bg-muted px-3 flex items-center rounded-r-md border border-l-0 border-input">
-                                  {currency}
+                              )}
+                              {infantPricingItem && (
+                                <div>
+                                  <Label htmlFor={`infant-${pricing.id}`} className="text-sm">
+                                    {infantPricingItem.position === 2 ? "2nd Infant" : infantPricingItem.position === 3 ? "3rd Infant" : `${infantPricingItem.position}th Infant`}
+                                  </Label>
+                                  <div className="flex mt-1">
+                                    <Input
+                                      id={`infant-${pricing.id}`}
+                                      type="number"
+                                      min="0"
+                                      step="0.01"
+                                      placeholder="0.00"
+                                      value={infantPricingItem.amount || ""}
+                                      onChange={(e) => updateInfantPricing(infantPricingItem.id, 'amount', parseFloat(e.target.value) || 0)}
+                                      className="rounded-r-none"
+                                    />
+                                    <div className="bg-muted px-3 flex items-center rounded-r-md border border-l-0 border-input">
+                                      {currency}
+                                    </div>
+                                  </div>
                                 </div>
-                              </div>
+                              )}
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="absolute top-2 right-2"
+                                onClick={() => removePositionGroup(pricing.id)}
+                              >
+                                <Trash className="h-4 w-4" />
+                              </Button>
                             </div>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => removeInfantPricing(pricing.id)}
-                              className="mt-6"
-                            >
-                              <Trash className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     </div>
                   )}
@@ -864,63 +835,4 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
                 <div className="mt-4 pt-4 border-t">
                   <Card>
                     <CardHeader className="py-3 px-4">
-                      <CardTitle className="text-base font-medium">Booking Configuration</CardTitle>
-                    </CardHeader>
-                    <CardContent className="py-3 px-4 space-y-4">
-                      <div className="flex items-center space-x-2">
-                        <Label htmlFor="leadTime" className="text-sm font-medium">
-                          Lead Time
-                        </Label>
-                        <Input
-                          id="leadTime"
-                          type="number"
-                          min="0"
-                          max="500"
-                          placeholder="0"
-                          value={leadTime === undefined ? "" : leadTime}
-                          onChange={(e) => setLeadTime(e.target.value ? parseInt(e.target.value) : undefined)}
-                          className="w-24 h-8"
-                        />
-                      </div>
-                      
-                      <div className="flex items-center space-x-2">
-                        <Label htmlFor="minStay" className="text-sm font-medium">
-                          Minimum Length of Stay
-                        </Label>
-                        <Input
-                          id="minStay"
-                          type="number"
-                          min="0"
-                          max="99"
-                          placeholder="0"
-                          value={minStay === undefined ? "" : minStay}
-                          onChange={(e) => setMinStay(e.target.value ? parseInt(e.target.value) : undefined)}
-                          className="w-24 h-8"
-                        />
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              </div>
-            </CollapsibleContent>
-          </Collapsible>
-        </div>
-
-        <div className="flex justify-start">
-          <Button 
-            onClick={handleAddValue}
-            disabled={!description.trim() || 
-                     (chargeType === "per-room" && !baseAmount) || 
-                     (chargeType === "per-adult-child" && !adultAmount) ||
-                     (chargeType === "per-adult-child" && childAmount && parseFloat(childAmount) > 0 && childAgeRanges.length === 0) ||
-                     (chargeType === "per-occupant" && occupancyPricing.every(p => !p.amount))}
-          >
-            Add Value
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
-  );
-};
-
-export default ValueForm;
+                      <CardTitle className="text-base font-medium
