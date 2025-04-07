@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,7 +28,6 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
   
   // Collapsible states
   const [isDateRangeOpen, setIsDateRangeOpen] = useState(false);
-  const [isDaysOfWeekOpen, setIsDaysOfWeekOpen] = useState(false);
   const [isBookingWindowOpen, setIsBookingWindowOpen] = useState(false);
   
   // Per-room amounts
@@ -177,7 +175,6 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
       daysOfWeek: ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
     });
     setIsDateRangeOpen(false);
-    setIsDaysOfWeekOpen(false);
     setIsBookingWindowOpen(false);
   };
 
@@ -766,9 +763,24 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
         </div>
 
         <div className="space-y-4">
-          {/* Collapsible sections */}
+          {/* Room Types & Rate Plans - moved to the top */}
+          <div className="border rounded-md">
+            <div className="flex items-center px-4 py-3 font-medium bg-gray-50">
+              <span>Room Types & Rate Plans</span>
+            </div>
+            <div className="px-4 py-3">
+              {parameters && (
+                <ParameterBuilder
+                  roomTypes={roomTypes}
+                  ratePlans={ratePlans}
+                  onChange={handleParametersChange}
+                  value={{...parameters, showRoomTypes: true, showRatePlans: true, showDateRanges: false, showDaysOfWeek: false}}
+                />
+              )}
+            </div>
+          </div>
           
-          {/* Date Ranges Section */}
+          {/* Combined Date Ranges & Days of Week Section */}
           <Collapsible 
             open={isDateRangeOpen} 
             onOpenChange={setIsDateRangeOpen}
@@ -779,40 +791,35 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
               {isDateRangeOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
             </CollapsibleTrigger>
             <CollapsibleContent className="px-4 py-3">
-              <div className="space-y-2">
-                <div id="dateRangesContainer">
-                  {parameters?.dateRanges && (
+              <div className="space-y-4">
+                {/* Date Ranges */}
+                <div className="space-y-2">
+                  <Label>Date Ranges</Label>
+                  <div id="dateRangesContainer">
+                    {parameters && (
+                      <ParameterBuilder
+                        roomTypes={roomTypes}
+                        ratePlans={ratePlans}
+                        onChange={handleParametersChange}
+                        value={{...parameters, showDateRanges: true, showDaysOfWeek: false, showRoomTypes: false, showRatePlans: false}}
+                      />
+                    )}
+                  </div>
+                </div>
+                
+                {/* Days of Week */}
+                <div className="space-y-2 mt-4 pt-4 border-t">
+                  <Label>Days of Week</Label>
+                  {parameters && (
                     <ParameterBuilder
                       roomTypes={roomTypes}
                       ratePlans={ratePlans}
                       onChange={handleParametersChange}
-                      value={{...parameters, showDateRanges: true, showDaysOfWeek: false, showRoomTypes: false, showRatePlans: false}}
+                      value={{...parameters, showDateRanges: false, showDaysOfWeek: true, showRoomTypes: false, showRatePlans: false}}
                     />
                   )}
                 </div>
               </div>
-            </CollapsibleContent>
-          </Collapsible>
-          
-          {/* Days of Week Section */}
-          <Collapsible 
-            open={isDaysOfWeekOpen} 
-            onOpenChange={setIsDaysOfWeekOpen}
-            className="border rounded-md"
-          >
-            <CollapsibleTrigger className="flex items-center justify-between w-full px-4 py-3 font-medium bg-gray-50">
-              <span>Days of Week</span>
-              {isDaysOfWeekOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
-            </CollapsibleTrigger>
-            <CollapsibleContent className="px-4 py-3">
-              {parameters && (
-                <ParameterBuilder
-                  roomTypes={roomTypes}
-                  ratePlans={ratePlans}
-                  onChange={handleParametersChange}
-                  value={{...parameters, showDateRanges: false, showDaysOfWeek: true, showRoomTypes: false, showRatePlans: false}}
-                />
-              )}
             </CollapsibleContent>
           </Collapsible>
           
@@ -860,23 +867,6 @@ const ValueForm = ({ roomTypes, ratePlans, onAdd }: ValueFormProps) => {
               </div>
             </CollapsibleContent>
           </Collapsible>
-          
-          {/* Room Types & Rate Plans - shown but not in collapsible */}
-          <div className="border rounded-md">
-            <div className="flex items-center px-4 py-3 font-medium bg-gray-50">
-              <span>Room Types & Rate Plans</span>
-            </div>
-            <div className="px-4 py-3">
-              {parameters && (
-                <ParameterBuilder
-                  roomTypes={roomTypes}
-                  ratePlans={ratePlans}
-                  onChange={handleParametersChange}
-                  value={{...parameters, showRoomTypes: true, showRatePlans: true, showDateRanges: false, showDaysOfWeek: false}}
-                />
-              )}
-            </div>
-          </div>
         </div>
 
         <div className="flex justify-start">

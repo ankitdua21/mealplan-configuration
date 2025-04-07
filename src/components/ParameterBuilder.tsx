@@ -156,7 +156,7 @@ const ParameterBuilder = ({
                         htmlFor={`room-${roomType.id}`}
                         className="cursor-pointer"
                       >
-                        {roomType.name}
+                        {roomType.name} {roomType.code ? `- ${roomType.code}` : ''}
                       </Label>
                     </div>
                   ))}
@@ -179,7 +179,7 @@ const ParameterBuilder = ({
                         htmlFor={`rate-${ratePlan.id}`}
                         className="cursor-pointer"
                       >
-                        {ratePlan.name}
+                        {ratePlan.name} {ratePlan.code ? `- ${ratePlan.code}` : ''}
                       </Label>
                     </div>
                   ))}
@@ -188,8 +188,6 @@ const ParameterBuilder = ({
             )}
           </div>
         )}
-
-        {showDateRanges && showRoomTypes && showRatePlans && <Separator />}
 
         {showDateRanges && (
           <div className="space-y-2">
@@ -200,8 +198,6 @@ const ParameterBuilder = ({
             />
           </div>
         )}
-
-        {showDaysOfWeek && showDateRanges && <Separator />}
 
         {showDaysOfWeek && (
           <div className="space-y-2">
